@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='19';
+const VERSION='20';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -436,9 +436,6 @@ async function whatsCatching(){
   const near=S.trips.filter(t=>(t.end||t.past)&&t.start>=since&&mark(t.markId)&&km(pt,mark(t.markId))<=40);
   const fish=near.reduce((n,t)=>n+t.fish.length,0),sp={};near.forEach(t=>t.fish.forEach(f=>{if(f.sp)sp[f.sp]=(sp[f.sp]||0)+1}));
   let h='<b>Your crew, last 30 days</b><div class="sm" style="margin:4px 0 12px">'+(near.length?near.length+' trip'+(near.length===1?'':'s')+', '+fish+' fish'+(Object.keys(sp).length?': '+Object.entries(sp).sort((a,b)=>b[1]-a[1]).map(([k,v])=>esc(k)+' '+v).join(', '):''):'<span class="mut">No trips near here yet.</span>')+'</div>';
-  let D=null;try{D=await jfetch('catching.json?'+Math.floor(Date.now()/36e5))}catch(e){}
-  if(D){const r=(D.regions||[]).find(r=>pt.lat>=r.box[0]&&pt.lat<=r.box[1]&&pt.lng>=r.box[2]&&pt.lng<=r.box[3]);
-    h+=(r&&r.summary)?'<b>Recent public reports, '+esc(r.name)+'</b><div class="sm" style="margin:4px 0">'+esc(r.summary)+'</div><div class="mut sm">Reports from '+esc(r.reportDate||r.checked)+'</div>':'<b>Recent public reports</b><div class="sm mut" style="margin:4px 0">Nothing recent found for this area yet.</div>'}
   const b2=document.getElementById('catching');if(b2)b2.innerHTML=h;
 }
 actions.where=el=>{planWhere=el.dataset.m;planMark=planWhere==='any'?null:planWhere;planStep=2;window.scrollTo(0,0);render()};
