@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='21';
+const VERSION='22';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -131,7 +131,7 @@ const condText=c=>!c?'conditions not yet filled':[c.tide?cap(c.tide)+' tide':nul
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 
 /* ---------- view state ---------- */
-let ob=0, pickCtx='marks', sumId=null, view='home', viewArg=null, planDay=ymd(new Date()), planStart=6, planMark=null, undoT=null, lastFish=null;
+window._tried=new Set();let ob=0, pickCtx='marks', sumId=null, view='home', viewArg=null, planDay=ymd(new Date()), planStart=6, planMark=null, undoT=null, lastFish=null;
 const TABS=[['home','Home'],['plan','Plan'],['marks','Marks'],['me','Me']];
 function go(v,a){if(v==='plan'&&view!=='plan'&&view!=='mark'){planStep=1;planWhere=null}view=v;viewArg=a||null;window.scrollTo(0,0);render()}
 function renderTabs(){
@@ -176,13 +176,21 @@ const actions={
   startAt(el){const m=mark(el.dataset.m);if(m)beginTrip(m,null)},
   setMethod(el){S.method.m=el.dataset.s;document.querySelectorAll('[data-act=setMethod]').forEach(b=>b.setAttribute('aria-pressed',b===el))},
   goFish(){const t=openTrip();if(!t)return;const b=document.getElementById('bait');S.method.bait=b?b.value.trim():'';t.method=S.method.m;t.bait=S.method.bait;t.setup=true;save();go('home')},
-  fishOn(){const t=openTrip();if(!t)return;const f={id:uid(),t:Date.now(),sp:null,size:null};t.fish.push(f);save();if(navigator.vibrate)navigator.vibrate(40);render();fishBar(t,f)},
+  fishOn(){const t=openTrip();if(!t)return;const f={id:uid(),t:Date.now(),sp:null,size:null};t.fish.push(f);save();getPos().then(p=>{if(p){f.loc=p;save()}});if(navigator.vibrate)navigator.vibrate(40);render();fishBar(t,f)},
   undoFish(el){const t=S.trips.find(x=>x.id===el.dataset.t);if(!t)return;t.fish=t.fish.filter(f=>f.id!==el.dataset.f);save();hideBar();render()},
   species(el){const t=S.trips.find(x=>x.id===el.dataset.t);const f=t&&t.fish.find(x=>x.id===el.dataset.f);if(!f)return;f.sp=f.sp===el.dataset.s?null:el.dataset.s;save();fishBar(t,f);render()},
   size(el){const t=S.trips.find(x=>x.id===el.dataset.t);const f=t&&t.fish.find(x=>x.id===el.dataset.f);if(!f)return;f.size=f.size===el.dataset.s?null:el.dataset.s;save();fishBar(t,f)},
   endAsk(){const t=openTrip();if(!t)return;if(t.fish.length){finish(t,'fish')}else go('end')},
   endBlank(){const t=openTrip();if(t)finish(t,'blank')},
   endOne(){const t=openTrip();if(!t)return;t.fish.push({id:uid(),t:Date.now(),sp:null,size:null});finish(t,'fish')},
+  async dropMark(el){
+    el.disabled=true;const t=openTrip();const p=await getPos();el.disabled=false;
+    if(!p){showBar('<b>Location is not available, so the mark was not saved.</b>',5000);return}
+    const d=new Date();const m=newMark('Mark '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+hhmm(d),p.lat,p.lng);m.unnamed=true;
+    if(t){t.drops=t.drops||[];t.drops.push(m.id)}save();
+    showBar('<div class="top"><b>Mark saved here</b><button class="chip" data-act="undoMark" data-m="'+m.id+'">Undo</button></div>',7000);render();
+  },
+  undoMark(el){S.marks=S.marks.filter(m=>m.id!==el.dataset.m);const t=openTrip();if(t&&t.drops)t.drops=t.drops.filter(x=>x!==el.dataset.m);S.last=(mark(t&&t.markId)||S.marks[0]||{}).id||null;save();hideBar();render()},
   changeMethod(){go('method')},
   cancelTrip(){const t=openTrip();if(t&&!t.fish.length){S.trips=S.trips.filter(x=>x!==t);save()}go('home')},
   keepGoing(){go('home')},
@@ -256,9 +264,10 @@ function vFishing(app,t){
     '<div class="dots" aria-label="Fish this trip">'+t.fish.map(f=>'<span class="pill">'+hhmm(new Date(f.t))+(f.sp?' · '+esc(f.sp):'')+(f.size?' · '+esc(f.size):'')+'</span>').join('')+'</div>'+
     '<div id="chart" class="card" style="margin-top:8px"><span class="mut">Loading…</span></div>'+
     '<button class="btn wide" style="margin-top:12px" data-act="endAsk">End trip</button>'+
+    '<button class="btn wide" style="margin-top:12px" data-act="dropMark">Drop a mark here<span class="mut sm">'+((t.drops||[]).length?' · '+(t.drops||[]).length+' this trip':'')+'</span></button>'+
     '<p style="margin-top:12px"><button class="chip" data-act="changeMethod">Change bait or method</button> '+(t.fish.length?'':'<button class="chip" data-act="cancelTrip">Cancel trip</button>')+'</p>';
   if(m)tideWeather('chart',m,ymd(new Date()),Math.max(0,Math.min(21,hourOf(new Date())-1)),false);
-  if(!t.cond)fillCond(t).then(()=>{if(view==='home')render()});
+  if(!t.cond&&!window._tried.has(t.id)){window._tried.add(t.id);fillCond(t).then(()=>{if(t.cond&&view==='home')render()})}
 }
 function vStartPick(app){
   app.innerHTML='<p><button class="btn sm" data-go="home">‹ Back</button></p><h1>Where are you fishing?</h1><p class="mut">Location is not available, so pick a mark or search for the nearest town.</p>'+
@@ -332,7 +341,7 @@ actions.pastSave=()=>{
   const d=document.getElementById('pd').value,tm=document.getElementById('pt').value||'07:00',mid=document.getElementById('pm').value;if(!d)return;
   const start=new Date(d+'T'+tm+':00').getTime();const n=pastRes==='fish'?Math.max(1,Number(document.getElementById('pn').value)||1):0;
   const t={id:uid(),markId:mid,start,end:start+3*3600e3,result:pastRes,past:true,fish:Array.from({length:n},()=>({id:uid(),t:start,sp:null,size:null}))};
-  S.trips.push(t);S.last=mid;save();go('home');fillCond(t).then(()=>{if(view==='home')render()});
+  S.trips.push(t);S.last=mid;save();go('home');fillCond(t).then(()=>{if(t.cond&&view==='home')render()});
 };
 
 function vMarks(app){
