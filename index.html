@@ -464,7 +464,7 @@ function extremes(lvl){
 }
 function moonAge(date){const jd=Date.UTC(+date.slice(0,4),+date.slice(5,7)-1,+date.slice(8,10),12)/864e5+2440587.5;return(((jd-2451550.1)%29.530588)+29.530588)%29.530588}
 function springNeap(date){
-  const f=a=>Math.abs(Math.cos(2*Math.PI*a/14.765)),a=moonAge(date),v=f(a-1.5),vn=f(a-0.5);
+  const f=a=>Math.abs(Math.cos(2*Math.PI*a/29.5306)),a=moonAge(date),v=f(a-1.5),vn=f(a-0.5);
   const lab=v>=.8?'Springs':v<=.35?'Neaps':(vn>v?'Building to springs':'Easing to neaps');return{v,lab}
 }
 const WC=c=>c==null?'':c===0?'Clear':c<=2?'Mostly clear':c===3?'Overcast':c<=48?'Fog':c<=57?'Drizzle':c<=67?'Rain':c<=77?'Snow':c<=82?'Showers':c<=86?'Snow showers':'Thunderstorms';
