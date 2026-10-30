@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='7';
+const VERSION='8';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -241,7 +241,7 @@ function vAbout(app){app.innerHTML='<p><button class="btn sm" data-go="home">‹
 /* ---------- flow C: fishing now ---------- */
 function vMethod(app,t){
   const m=mark(t.markId);
-  app.innerHTML=(S.profile.mode?'':'<h2>Boat or shore?</h2><div class="chips" style="margin-bottom:8px"><button class="chip" data-act="setMode2" data-m="boat" aria-pressed="false">Boat</button><button class="chip" data-act="setMode2" data-m="shore" aria-pressed="false">Shore</button></div>')+'<h1>Bait or method</h1><p class="mut">'+esc(m?m.name:'')+(m&&m.unnamed?' (not named yet)':'')+'. Last used is filled in. Set it once for the trip.</p>'+
+  app.innerHTML='<h1>Bait or method</h1><p class="mut">'+esc(m?m.name:'')+(m&&m.unnamed?' (not named yet)':'')+'. Last used is filled in. Set it once for the trip.</p>'+
     '<div class="chips" style="margin:14px 0">'+METHODS.map(x=>'<button class="chip" data-act="setMethod" data-s="'+x+'" aria-pressed="'+(S.method.m===x)+'">'+x+'</button>').join('')+'</div>'+
     '<label for="bait">Which bait or lure? (optional)</label><input id="bait" type="text" value="'+esc(S.method.bait)+'" placeholder="e.g. sandeel, 120 mm shad">'+
     '<p style="margin-top:18px"><button class="big" style="min-height:110px;font-size:30px" data-act="goFish">Start fishing</button></p>';
