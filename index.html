@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='13';
+const VERSION='14';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -98,7 +98,7 @@ const oct=d=>OCT[Math.round(((d%360)+360)%360/45)%8];
 /* ---------- conditions (Open-Meteo, approximate model tide) ---------- */
 async function jfetch(url){const c=new AbortController();const t=setTimeout(()=>c.abort(),9000);try{const r=await fetch(url,{signal:c.signal});if(!r.ok)throw new Error(r.status);return await r.json()}finally{clearTimeout(t)}}
 async function getDay(m,date){
-  const k=m.lat.toFixed(2)+','+m.lng.toFixed(2)+','+date;
+  const k='v2,'+m.lat.toFixed(2)+','+m.lng.toFixed(2)+','+date;
   const c=CACHE[k], today=ymd(new Date());
   if(c&&(date<today||Date.now()-c.at<3*3600e3))return c.d;
   try{
@@ -106,8 +106,8 @@ async function getDay(m,date){
     const old=date<addDays(today,-85);
     const [mar,wx]=await Promise.all([
       jfetch('https://marine-api.open-meteo.com/v1/marine?'+ll+'&hourly=sea_level_height_msl'),
-      jfetch((old?'https://archive-api.open-meteo.com/v1/archive?':'https://api.open-meteo.com/v1/forecast?')+ll+'&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kn')]);
-    const d={lvl:mar.hourly.sea_level_height_msl,wsp:wx.hourly.wind_speed_10m,wdr:wx.hourly.wind_direction_10m,gst:wx.hourly.wind_gusts_10m};
+      jfetch((old?'https://archive-api.open-meteo.com/v1/archive?':'https://api.open-meteo.com/v1/forecast?')+ll+'&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,precipitation,weather_code,cloud_cover,pressure_msl&wind_speed_unit=kn')]);
+    const d={lvl:mar.hourly.sea_level_height_msl,wsp:wx.hourly.wind_speed_10m,wdr:wx.hourly.wind_direction_10m,gst:wx.hourly.wind_gusts_10m,tmp:wx.hourly.temperature_2m,rain:wx.hourly.precipitation,wc:wx.hourly.weather_code,cld:wx.hourly.cloud_cover,prs:wx.hourly.pressure_msl};
     CACHE[k]={at:Date.now(),d};saveCache();return d;
   }catch(e){return c?c.d:null}
 }
@@ -257,7 +257,7 @@ function vFishing(app,t){
     '<div id="chart" class="card" style="margin-top:8px"><span class="mut">Loading…</span></div>'+
     '<button class="btn wide" style="margin-top:12px" data-act="endAsk">End trip</button>'+
     '<p style="margin-top:12px"><button class="chip" data-act="changeMethod">Change bait or method</button> '+(t.fish.length?'':'<button class="chip" data-act="cancelTrip">Cancel trip</button>')+'</p>';
-  if(m)drawChart('chart',m,ymd(new Date()),Math.max(0,Math.min(21,hourOf(new Date())-1)));
+  if(m)tideWeather('chart',m,ymd(new Date()),Math.max(0,Math.min(21,hourOf(new Date())-1)),false);
   if(!t.cond)fillCond(t).then(()=>{if(view==='home')render()});
 }
 function vStartPick(app){
@@ -384,7 +384,7 @@ actions.planIt=el=>{S.plan={markId:el.dataset.m,day:planDay,start:planStart};sav
 actions.renameMark=el=>{const m=mark(el.dataset.m),v=document.getElementById('rn').value.trim();if(m&&v){m.name=v;save();go('mark',m.id)}};
 function vMark(app){
   const m=mark(viewArg);if(!m){go('marks');return}
-  setTimeout(()=>drawChart('mchart',m,planDay,planStart),0);
+  setTimeout(()=>tideWeather('mchart',m,planDay,planStart,false),0);
   const ts=S.trips.filter(t=>t.markId===m.id&&(t.end||t.past)).sort((a,b)=>a.start-b.start);const c=ts.filter(t=>t.result==='fish').length;
   app.innerHTML='<p><button class="btn sm" data-go="marks">‹ Marks</button></p><h1>'+esc(m.name)+'</h1>'+
     '<p class="mut">'+(ts.length?'Caught on '+c+' of '+ts.length+' trips.':'No trips here yet.')+(ts.length<5?' <span class="pill t">not enough trips yet</span>':'')+'</p>'+
@@ -442,8 +442,8 @@ async function whatsCatching(){
 }
 actions.where=el=>{planWhere=el.dataset.m;planMark=planWhere==='any'?null:planWhere;render()};
 function planDraw(){const m=planWhere&&planWhere!=='any'?mark(planWhere):null;const r=m||refPoint();const box=document.getElementById('chart');if(!r){if(box)box.innerHTML='<span class="mut">Choose a place to see the tide and wind.</span>';return}
-  drawChart('chart',r,planDay,planStart);
-  getDay(r,planDay).then(d=>{const e=document.getElementById('windline');if(!e||!d)return;const f=featsAt(d,planStart+1);if(f&&f.wsp!=null)e.innerHTML='<b>Wind '+oct(f.wdr)+' '+f.wsp+' kn</b>'+(f.tide?' · '+cap(f.tide)+' tide':'')+'<div class="mut sm">At '+(m?esc(m.name):(r===S.here?'your location':esc(r.name)))+'</div>'})}
+  tideWeather('chart',r,planDay,planStart,true);
+  getDay(r,planDay).then(d=>{const e=document.getElementById('windline');if(!e||!d)return;const f=featsAt(d,planStart+1);if(false)e.innerHTML='<b>Wind '+oct(f.wdr)+' '+f.wsp+' kn</b>'+(f.tide?' · '+cap(f.tide)+' tide':'')+'<div class="mut sm">At '+(m?esc(m.name):(r===S.here?'your location':esc(r.name)))+'</div>'})}
 actions.day=el=>{planDay=el.dataset.d;render()};
 actions.askGroups=async()=>{
   const m=mark(planMark)||refPoint();if(!m)return;const nm=m.name||'the coast',day=await getDay(m,planDay),f=day?featsAt(day,planStart+1):null;
@@ -452,6 +452,42 @@ actions.askGroups=async()=>{
   try{await navigator.clipboard.writeText(txt)}catch(e){}
 };
 actions.planPick=el=>{planMark=el.dataset.m;go('mark',el.dataset.m)};
+
+/* ---------- tide, springs and neaps, weather ---------- */
+function extremes(lvl){
+  const out=[];if(!lvl)return out;
+  for(let h=1;h<23;h++){const a=lvl[h-1],b=lvl[h],c=lvl[h+1];if(a==null||b==null||c==null)continue;
+    const hi=b>=a&&b>c,lo=b<=a&&b<c;if(!hi&&!lo)continue;
+    const d=a-2*b+c;const off=d?0.5*(a-c)/d:0;const t=h+Math.max(-.5,Math.min(.5,off));
+    out.push({hi,t,mins:Math.round(t*60)})}
+  return out;
+}
+function moonAge(date){const jd=Date.UTC(+date.slice(0,4),+date.slice(5,7)-1,+date.slice(8,10),12)/864e5+2440587.5;return(((jd-2451550.1)%29.530588)+29.530588)%29.530588}
+function springNeap(date){
+  const f=a=>Math.abs(Math.cos(2*Math.PI*a/14.765)),a=moonAge(date),v=f(a-1.5),vn=f(a-0.5);
+  const lab=v>=.8?'Springs':v<=.35?'Neaps':(vn>v?'Building to springs':'Easing to neaps');return{v,lab}
+}
+const WC=c=>c==null?'':c===0?'Clear':c<=2?'Mostly clear':c===3?'Overcast':c<=48?'Fog':c<=57?'Drizzle':c<=67?'Rain':c<=77?'Snow':c<=82?'Showers':c<=86?'Snow showers':'Thunderstorms';
+const clock=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+async function tideWeather(id,m,date,start,withMap){
+  const box=document.getElementById(id);if(!box||!m)return;const day=await getDay(m,date);const b2=document.getElementById(id);if(!b2)return;
+  if(!day||!day.lvl||day.lvl.every(x=>x==null)){b2.innerHTML='<span class="mut">No tide or weather forecast yet. Connect to the internet once and it is saved on the phone.</span>';return}
+  const ex=extremes(day.lvl),v=day.lvl.filter(x=>x!=null),rg=Math.max(...v)-Math.min(...v),sn=springNeap(date);
+  const hs=Array.from({length:4},(_,i)=>start+i).filter(h=>h<24);
+  const avg=a=>{const x=hs.map(h=>a&&a[h]).filter(z=>z!=null);return x.length?x.reduce((p,q)=>p+q,0)/x.length:null};
+  const wsp=avg(day.wsp),gst=Math.max(...hs.map(h=>day.gst&&day.gst[h]||0)),wdr=day.wdr[start+1],tmp=avg(day.tmp),rain=hs.reduce((n,h)=>n+(day.rain&&day.rain[h]||0),0),cld=avg(day.cld),prs=avg(day.prs),wc=day.wc?day.wc[start+1]:null;
+  let h='<div class="chips" style="gap:8px">'+ex.map(e=>'<div class="pill" style="font-size:15px;padding:6px 12px;color:var(--ink);border-color:'+(e.hi?'var(--tide)':'var(--line)')+'"><b>'+(e.hi?'High ':'Low ')+clock(e.mins)+'</b></div>').join('')+'</div>'+
+    '<div class="sm" style="margin-top:12px"><b>'+sn.lab+'</b> · range about '+rg.toFixed(1)+' m</div>'+
+    '<div style="position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--line),var(--tide));margin:8px 0 2px"><div style="position:absolute;top:-4px;left:calc('+Math.round(sn.v*100)+'% - 11px);width:22px;height:22px;border-radius:50%;background:var(--acc);border:3px solid var(--surf)"></div></div>'+
+    '<div class="legend" style="justify-content:space-between"><span>Neaps</span><span>Springs</span></div>'+
+    '<div class="sm" style="margin-top:14px"><b>'+String(start).padStart(2,'0')+':00 to '+String((start+3)%24).padStart(2,'0')+':00</b></div>'+
+    '<div class="sm">'+(wc!=null?WC(wc)+(tmp!=null?', ':''):'')+(tmp!=null?Math.round(tmp)+'°C':'')+'</div>'+
+    (wsp!=null?'<div class="sm">Wind '+oct(wdr)+' '+Math.round(wsp)+' kn'+(gst>0?', gusts '+Math.round(gst):'')+'</div>':'')+
+    ((rain!=null&&day.rain)?'<div class="sm">Rain '+(rain<0.1?'none':rain.toFixed(1)+' mm')+(cld!=null?' · cloud '+Math.round(cld)+'%':'')+(prs!=null?' · '+Math.round(prs)+' hPa':'')+'</div>':'')+
+    '<div class="mut sm" style="margin-top:10px">Tide times and range are from a weather model, so treat them as about right, within half an hour.</div>';
+  if(withMap)h+='<iframe title="Weather map" loading="lazy" style="width:100%;height:280px;border:0;border-radius:12px;margin-top:12px" src="https://embed.windy.com/embed2.html?lat='+m.lat+'&lon='+m.lng+'&detailLat='+m.lat+'&detailLon='+m.lng+'&zoom=9&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1"></iframe>';
+  b2.innerHTML=h;
+}
 async function drawChart(id,m,date,start){
   const box=document.getElementById(id);if(!box||!m)return;const day=await getDay(m,date);if(!document.getElementById(id))return;const planDay=date,planStart=start;
   if(!day||!day.lvl||day.lvl.every(x=>x==null)){box.innerHTML='<span class="mut">No tide or wind forecast yet. Connect to the internet once and it will be saved on the phone for offline use.</span>';return}
