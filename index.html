@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='20';
+const VERSION='21';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -420,10 +420,10 @@ function vPlan(app){
   app.innerHTML=planHead()+'<h1>'+esc(mk.name)+'</h1><h2 style="margin-top:6px">When?</h2><div class="chips" style="flex-wrap:nowrap;gap:6px;align-items:center">'+days.map(([l,d])=>'<button class="chip" style="padding:0 12px;font-size:15px;flex:none" data-act="day" data-d="'+d+'" aria-pressed="'+(planDay===d)+'">'+l+'</button>').join('')+
     '<input id="pday" type="date" value="'+planDay+'" aria-label="Pick a day" style="flex:1;min-width:0;width:auto;min-height:48px;padding:4px 6px;font-size:14px">'+'</div>'+
     '<div id="chart" class="card" style="margin-top:12px"><span class="mut">Loading…</span></div>'+
-    '<h2>What\'s catching?</h2><div id="catching" class="card"><span class="mut">Looking…</span></div>'+
+    '<h2>Your history here</h2><div id="catching" class="card"><span class="mut">Looking…</span></div>'+
     '<button class="big" style="min-height:84px;font-size:24px;margin-top:16px" data-act="planIt" data-m="'+mk.id+'">Plan it<small>'+dlong(planDay)+'</small></button>';
   document.getElementById('pday').addEventListener('change',e=>{if(e.target.value){planDay=e.target.value;render()}});
-  tideWeather('chart',mk,planDay,planStart,false,true);whatsCatching();
+  tideWeather('chart',mk,planDay,planStart,false,true);computePlan();
 }
 actions.planBack=()=>{planStep=Math.max(1,planStep-1);render()};
 
@@ -507,9 +507,10 @@ async function drawChart(id,m,date,start){
     '<div class="legend"><span>Blue line: tide height (approximate model)</span><span>Arrows: wind, knots</span></div>';
 }
 async function computePlan(){
-  const list=document.getElementById('planlist');const m=planWhere&&mark(planWhere);if(!list||!m)return;
+  const box=document.getElementById('catching');const m=planWhere&&mark(planWhere);if(!box||!m)return;
   const day=await getDay(m,planDay);
   const all=S.trips.filter(t=>t.markId===m.id&&(t.end||t.past)),ts=all.filter(t=>t.cond);
+  const fishT=all.filter(t=>t.result==='fish').length,blank=all.length-fishT;
   const res=[['morning',8],['afternoon',14],['evening',19]].map(([name,mid])=>{
     const f=day?featsAt(day,mid):null;let num=0,den=0,n=0;
     if(f)for(const t of ts){let w=0,mx=0;const c=t.cond;
@@ -518,13 +519,15 @@ async function computePlan(){
       if(f.wsp!=null&&c.wsp!=null){mx+=1;if(Math.abs(f.wsp-c.wsp)<=5)w+=1}
       if(c.h!=null){mx+=1;if(Math.abs(mid-c.h)<=3)w+=1}
       if(mx>=3&&w>=Math.ceil(mx*0.6)){n++;den+=w;if(t.result==='fish')num+=w}}
-    return{name,n,rate:den?num/den:null,f}}).filter(r=>r.n>=2).sort((a,b)=>b.rate-a.rate);
+    return{name,n,rate:den?num/den:null}}).filter(r=>r.n>=2).sort((a,b)=>b.rate-a.rate);
   const best=res[0];
-  const verdict=(all.length>=5&&best)?(best.rate>=0.6?'Promising':best.rate>=0.35?'Worth a go':'Slow')+' in the '+best.name+': caught on '+Math.round(best.rate*best.n)+' of '+best.n+' similar trips':'Not enough trips here yet'+(all.length?' ('+all.length+' logged)':'');
-  const f14=day?featsAt(day,14):null;const bad=f14&&f14.wdr!=null&&m.wind&&!m.wind.includes(oct(f14.wdr));
-  if(!document.getElementById('planlist'))return;
-  list.innerHTML='<div class="card"><b>Your record here</b><div class="sm">'+esc(verdict)+'</div></div>'+(bad?'<p class="note" style="margin-top:10px">The wind is from a direction you marked as poor here.</p>':'');
-  const pi=document.getElementById('planit');if(pi)pi.innerHTML='<button class="big" style="min-height:84px;font-size:24px;margin-top:12px" data-act="planIt" data-m="'+m.id+'">Plan it<small>'+dlong(planDay)+'</small></button>';
+  const dots='<div class="dots" aria-hidden="true">'+Array.from({length:5},(_,i)=>'<span class="dot'+(i<all.length?' f':'')+'"></span>').join('')+'</div>';
+  let h;
+  if(!all.length)h='<b>No trips logged here yet</b><p class="sm mut" style="margin:6px 0 0">Every trip you log here, with fish or without, builds your own picture of when this place fishes best. After about five trips this page starts showing what works in the tide and wind you pick. For now, there is nothing to go on.</p>'+dots;
+  else if(all.length<5||!best)h='<b>'+all.length+' trip'+(all.length===1?'':'s')+' here: '+fishT+' with fish, '+blank+' blank</b>'+dots+'<p class="sm mut" style="margin:6px 0 0">'+(all.length<5?(5-all.length)+' more and this page starts predicting for you. Blank trips count as much as fish.':'Not enough similar conditions logged yet to say what suits this day.')+'</p>';
+  else h='<b>'+(best.rate>=0.6?'Promising':best.rate>=0.35?'Worth a go':'Slow')+' in the '+best.name+'</b><p class="sm" style="margin:6px 0 0">Caught on '+Math.round(best.rate*best.n)+' of '+best.n+' trips in similar tide and wind. Based on '+all.length+' trips here: '+fishT+' with fish, '+blank+' blank.</p>';
+  const f14=day?featsAt(day,14):null;if(f14&&f14.wdr!=null&&m.wind&&!m.wind.includes(oct(f14.wdr)))h+='<p class="note" style="margin-top:10px">The wind is from a direction you marked as poor here.</p>';
+  const b2=document.getElementById('catching');if(b2)b2.innerHTML=h;
   fillMissing();
 }
 let filling=false;
