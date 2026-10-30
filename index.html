@@ -177,7 +177,7 @@ function condLine(t){return esc(condText(t.cond))}
 function vHome(app){
   const t=openTrip();
   if(!t&&!S.marks.length){
-    app.innerHTML='<h1>Where do you fish?</h1><p class="mut">Name your first mark. Stand at it (or near it) and the app uses your location to look up the tide and wind there. You can add more marks later, and nobody else sees them.</p>'+
+    app.innerHTML='<h1>Where are you going fishing?</h1><p class="mut">Name your first mark. Stand at it (or near it) and the app uses your location to look up the tide and wind there. You can add more marks later, and nobody else sees them.</p>'+
       '<label for="fm">Mark name or nickname</label><input id="fm" type="text" placeholder="Anything you will recognise" autocomplete="off">'+
       '<div id="fmxy" style="display:none"><p class="note" style="margin-top:12px">Could not get your location. Enter the position instead.</p><label for="fml">Latitude</label><input id="fml" type="number" step="0.0001" placeholder="e.g. 50.2300"><label for="fmg">Longitude</label><input id="fmg" type="number" step="0.0001" placeholder="e.g. -3.7700"></div>'+
       '<p style="margin-top:16px"><button class="big" style="min-height:120px;font-size:28px" data-act="firstMark">Save mark and start<small>Uses where you are now</small></button></p>'+
@@ -186,7 +186,7 @@ function vHome(app){
   }
   if(!t){
     const last=S.last&&mark(S.last)?S.last:S.marks[0].id;
-    app.innerHTML='<h1>Where are you fishing?</h1><p class="mut">Pick the mark, then start. One tap per fish after that.</p>'+
+    app.innerHTML='<h1>Where are you going fishing?</h1><p class="mut">Pick the mark, then start. One tap per fish after that.</p>'+
       '<div class="chips" style="margin:14px 0 18px">'+S.marks.map(m=>'<button class="chip" data-act="pick" data-pick="'+m.id+'" aria-pressed="'+(m.id===last)+'">'+esc(m.name)+'</button>').join('')+'<button class="chip" data-go="addmark">+ New mark</button></div>'+
       '<button class="big" data-act="startTrip">Start fishing<small>Saves the time, tide and wind for you</small></button>'+
       '<p style="margin-top:18px"><button class="btn sm" data-go="past">Add a past trip</button></p>'+recentHtml();
