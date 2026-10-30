@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='8';
+const VERSION='9';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -182,6 +182,8 @@ const actions={
   endAsk(){const t=openTrip();if(!t)return;if(t.fish.length){finish(t,'fish')}else go('end')},
   endBlank(){const t=openTrip();if(t)finish(t,'blank')},
   endOne(){const t=openTrip();if(!t)return;t.fish.push({id:uid(),t:Date.now(),sp:null,size:null});finish(t,'fish')},
+  changeMethod(){go('method')},
+  cancelTrip(){const t=openTrip();if(t&&!t.fish.length){S.trips=S.trips.filter(x=>x!==t);save()}go('home')},
   keepGoing(){go('home')},
   nameSpot(){const m=mark(viewArg),v=document.getElementById('nm').value.trim();if(m&&v){m.name=v;m.unnamed=false;save()}go('summary',sumId)},
   skipName(){go('summary',sumId)},
@@ -189,7 +191,7 @@ const actions={
   fillAll(el){fillMissing(el)},
 };
 function beginTrip(m,pos){
-  const t={id:uid(),markId:m.id,start:Date.now(),end:null,result:null,fish:[],startLoc:pos||null};
+  const t={id:uid(),markId:m.id,start:Date.now(),end:null,result:null,fish:[],startLoc:pos||null,method:S.method.m,bait:S.method.bait,setup:true};
   S.trips.push(t);S.last=m.id;save();fillCond(t);go('home');
 }
 async function finish(t,res){
@@ -204,7 +206,7 @@ async function finish(t,res){
 function render(){
   const app=document.getElementById('app');
     renderTabs();
-  const V={home:vHome,end:vEnd,past:vPast,plan:vPlan,marks:vMarks,mark:vMark,addmark:vAddMark,me:vMe,startpick:vStartPick,name:vName,summary:vSummary,about:vAbout}[view]||vHome;
+  const V={home:vHome,end:vEnd,past:vPast,plan:vPlan,marks:vMarks,mark:vMark,addmark:vAddMark,me:vMe,startpick:vStartPick,method:app=>{const t=openTrip();if(!t)return go('home');vMethod(app,t)},name:vName,summary:vSummary,about:vAbout}[view]||vHome;
   app.innerHTML='';V(app);
 }
 function condLine(t){return esc(condText(t.cond))}
@@ -226,7 +228,7 @@ function onboard(app){
 /* ---------- flow A: the first screen ---------- */
 function vHome(app){
   const t=openTrip();
-  if(t){if(!t.setup)return vMethod(app,t);return vFishing(app,t)}
+  if(t)return vFishing(app,t);
   const p=S.plan&&mark(S.plan.markId)?S.plan:null;
   app.innerHTML='<h1>Planning a trip, or fishing now?</h1><p id="hl" class="mut sm">&nbsp;</p>'+
     (p?'<div class="card" style="margin:10px 0"><b>Planned: '+esc(mark(p.markId).name)+'</b><div class="mut sm">'+dlong(p.day)+', '+String(p.start).padStart(2,'0')+':00 to '+String((p.start+3)%24).padStart(2,'0')+':00</div><button class="btn sm wide" style="margin-top:8px" data-act="startPlanned">Start this trip</button></div>':'')+
@@ -252,7 +254,8 @@ function vFishing(app,t){
     '<button class="big" data-act="fishOn">Fish on<small>'+t.fish.length+' this trip</small></button>'+
     '<div class="dots" aria-label="Fish this trip">'+t.fish.map(f=>'<span class="pill">'+hhmm(new Date(f.t))+(f.sp?' · '+esc(f.sp):'')+(f.size?' · '+esc(f.size):'')+'</span>').join('')+'</div>'+
     '<div id="chart" class="card" style="margin-top:8px"><span class="mut">Loading…</span></div>'+
-    '<button class="btn wide" style="margin-top:12px" data-act="endAsk">End trip</button>';
+    '<button class="btn wide" style="margin-top:12px" data-act="endAsk">End trip</button>'+
+    '<p style="margin-top:12px"><button class="chip" data-act="changeMethod">Change bait or method</button> '+(t.fish.length?'':'<button class="chip" data-act="cancelTrip">Cancel trip</button>')+'</p>';
   if(m)drawChart('chart',m,ymd(new Date()),Math.max(0,Math.min(21,hourOf(new Date())-1)));
   if(!t.cond)fillCond(t).then(()=>{if(view==='home')render()});
 }
