@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='18';
+const VERSION='19';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -417,13 +417,13 @@ function vPlan(app){
     bindPicker();return;
   }
   const mk=mark(w);
-  app.innerHTML=planHead()+'<h1>'+esc(mk.name)+'</h1><h2 style="margin-top:6px">When?</h2><div class="chips">'+days.map(([l,d])=>'<button class="chip" data-act="day" data-d="'+d+'" aria-pressed="'+(planDay===d)+'">'+l+'</button>').join('')+
-    '</div><div style="margin-top:10px"><input id="pday" type="date" value="'+planDay+'" aria-label="Pick a day"></div>'+
+  app.innerHTML=planHead()+'<h1>'+esc(mk.name)+'</h1><h2 style="margin-top:6px">When?</h2><div class="chips" style="flex-wrap:nowrap;gap:6px;align-items:center">'+days.map(([l,d])=>'<button class="chip" style="padding:0 12px;font-size:15px;flex:none" data-act="day" data-d="'+d+'" aria-pressed="'+(planDay===d)+'">'+l+'</button>').join('')+
+    '<input id="pday" type="date" value="'+planDay+'" aria-label="Pick a day" style="flex:1;min-width:0;width:auto;min-height:48px;padding:4px 6px;font-size:14px">'+'</div>'+
     '<div id="chart" class="card" style="margin-top:12px"><span class="mut">Loading…</span></div>'+
-    '<div id="planlist" style="margin-top:12px"></div><div id="planit"></div>'+
-    '<h2>What\'s catching?</h2><div id="catching" class="card"><span class="mut">Looking…</span></div><h2>Weather map</h2><div id="wmap"></div>';
+    '<h2>What\'s catching?</h2><div id="catching" class="card"><span class="mut">Looking…</span></div>'+
+    '<button class="big" style="min-height:84px;font-size:24px;margin-top:16px" data-act="planIt" data-m="'+mk.id+'">Plan it<small>'+dlong(planDay)+'</small></button>';
   document.getElementById('pday').addEventListener('change',e=>{if(e.target.value){planDay=e.target.value;render()}});
-  tideWeather('chart',mk,planDay,planStart,false,true);computePlan();whatsCatching();document.getElementById('wmap').innerHTML=mapHtml(mk);
+  tideWeather('chart',mk,planDay,planStart,false,true);whatsCatching();
 }
 actions.planBack=()=>{planStep=Math.max(1,planStep-1);render()};
 
@@ -438,8 +438,7 @@ async function whatsCatching(){
   let h='<b>Your crew, last 30 days</b><div class="sm" style="margin:4px 0 12px">'+(near.length?near.length+' trip'+(near.length===1?'':'s')+', '+fish+' fish'+(Object.keys(sp).length?': '+Object.entries(sp).sort((a,b)=>b[1]-a[1]).map(([k,v])=>esc(k)+' '+v).join(', '):''):'<span class="mut">No trips near here yet.</span>')+'</div>';
   let D=null;try{D=await jfetch('catching.json?'+Math.floor(Date.now()/36e5))}catch(e){}
   if(D){const r=(D.regions||[]).find(r=>pt.lat>=r.box[0]&&pt.lat<=r.box[1]&&pt.lng>=r.box[2]&&pt.lng<=r.box[3]);
-    if(r)h+='<b>'+esc(r.name)+', from recent public reports</b><div class="sm" style="margin:4px 0">'+esc(r.summary)+'</div><div class="mut sm">Checked '+esc(r.checked)+'. '+esc(r.note||'')+'</div><div class="sm" style="margin-top:6px">'+r.sources.map(x=>'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>').join(' · ')+'</div>';
-    else h+='<b>Recent public reports</b><div class="sm mut" style="margin:4px 0">No summary for this area yet. Local reports:</div><div class="sm">'+(D.national||[]).map(x=>'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>').join(' · ')+'</div>'}
+    h+=(r&&r.summary)?'<b>Recent public reports, '+esc(r.name)+'</b><div class="sm" style="margin:4px 0">'+esc(r.summary)+'</div><div class="mut sm">Reports from '+esc(r.reportDate||r.checked)+'</div>':'<b>Recent public reports</b><div class="sm mut" style="margin:4px 0">Nothing recent found for this area yet.</div>'}
   const b2=document.getElementById('catching');if(b2)b2.innerHTML=h;
 }
 actions.where=el=>{planWhere=el.dataset.m;planMark=planWhere==='any'?null:planWhere;planStep=2;window.scrollTo(0,0);render()};
@@ -471,7 +470,8 @@ function springNeap(date){
 }
 const WC=c=>c==null?'':c===0?'Clear':c<=2?'Mostly clear':c===3?'Overcast':c<=48?'Fog':c<=57?'Drizzle':c<=67?'Rain':c<=77?'Snow':c<=82?'Showers':c<=86?'Snow showers':'Thunderstorms';
 const clock=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-function mapHtml(m){return '<iframe title="Weather map" loading="lazy" style="width:100%;height:280px;border:0;border-radius:12px;margin-top:12px" src="https://embed.windy.com/embed2.html?lat='+m.lat+'&lon='+m.lng+'&detailLat='+m.lat+'&detailLon='+m.lng+'&zoom=9&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1"></iframe>'}
+function mapHtml(m,date){const d=Math.max(0,Math.round((new Date(date+'T12:00:00Z')-new Date(ymd(new Date())+'T12:00:00Z'))/864e5));const cal=d===0?'now':d===1?'24':d===2?'48':'72';
+  return '<iframe title="Wind map" loading="lazy" style="width:100%;height:300px;border:0;border-radius:12px;margin-top:14px" src="https://embed.windy.com/embed2.html?lat='+m.lat+'&lon='+m.lng+'&detailLat='+m.lat+'&detailLon='+m.lng+'&zoom=9&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar='+cal+'&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1"></iframe>'}
 function periodRows(day){
   const P=[['Morning',6,11],['Afternoon',12,17],['Evening',18,22]];
   const av=(a,x,y)=>{const v=[];for(let h=x;h<=y;h++)if(a&&a[h]!=null)v.push(a[h]);return v.length?v.reduce((p,q)=>p+q,0)/v.length:null};
@@ -487,9 +487,9 @@ async function tideWeather(id,m,date,start,withMap,periods){
   const wsp=avg(day.wsp),gst=Math.max(...hs.map(h=>day.gst&&day.gst[h]||0)),wdr=day.wdr[start+1],tmp=avg(day.tmp),rain=hs.reduce((n,h)=>n+(day.rain&&day.rain[h]||0),0),cld=avg(day.cld),prs=avg(day.prs),wc=day.wc?day.wc[start+1]:null;
   let h='<div class="chips" style="gap:8px">'+ex.map(e=>'<div class="pill" style="font-size:15px;padding:6px 12px;color:var(--ink);border-color:'+(e.hi?'var(--tide)':'var(--line)')+'"><b>'+(e.hi?'High ':'Low ')+clock(e.mins)+'</b></div>').join('')+'</div>'+
     '<div class="sm" style="margin-top:12px"><b>'+sn.lab+'</b> · range about '+rg.toFixed(1)+' m</div>'+
-    '<div style="position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--line),var(--tide));margin:8px 0 2px"><div style="position:absolute;top:-4px;left:calc('+Math.round(sn.v*100)+'% - 11px);width:22px;height:22px;border-radius:50%;background:var(--acc);border:3px solid var(--surf)"></div></div>'+
-    '<div class="legend" style="justify-content:space-between"><span>Neaps</span><span>Springs</span></div>'+
-    (periods?periodRows(day):
+    '<div style="display:flex;align-items:flex-end;gap:5px;height:34px;margin:10px 0 2px" aria-hidden="true">'+[0,1,2,3,4,5,6].map(k=>'<div style="flex:1;height:'+(8+k*4)+'px;border-radius:3px;background:'+(k===Math.round(sn.v*6)?'var(--acc)':'var(--line)')+'"></div>').join('')+'</div>'+
+    '<div class="legend" style="justify-content:space-between;margin-top:2px"><span>Neaps</span><span>Springs</span></div>'+
+    (periods?mapHtml(m,date):
     '<div class="sm" style="margin-top:14px"><b>'+String(start).padStart(2,'0')+':00 to '+String((start+3)%24).padStart(2,'0')+':00</b></div>'+
     '<div class="sm">'+(wc!=null?WC(wc)+(tmp!=null?', ':''):'')+(tmp!=null?Math.round(tmp)+'°C':'')+'</div>'+
     (wsp!=null?'<div class="sm">Wind '+oct(wdr)+' '+Math.round(wsp)+' kn'+(gst>0?', gusts '+Math.round(gst):'')+'</div>':'')+
