@@ -1,4 +1,4 @@
-const C='fishful-shell-15';
+const C='fishful-shell-16';
 self.addEventListener('install',e=>{self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 /* Online: always fetch the newest copy, bypassing the browser's HTTP cache. Offline: use the last saved copy. */

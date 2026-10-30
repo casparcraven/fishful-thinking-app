@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='15';
+const VERSION='16';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -413,8 +413,7 @@ function vPlan(app){
   if(planStep===1){
     app.innerHTML='<h1>Where are you going?</h1>'+
       (S.marks.length?'<div class="chips" style="margin:12px 0">'+S.marks.map(m=>'<button class="chip" data-act="where" data-m="'+m.id+'">'+esc(m.name)+'</button>').join('')+'</div>':'')+
-      pickerHtml().replace('Search a town, harbour or beach','Search a town, harbour or beach')+
-      '<p style="margin-top:16px"><button class="btn wide" data-act="where" data-m="any">Not sure yet</button></p>';
+      pickerHtml();
     bindPicker();return;
   }
   if(planStep===2){
@@ -540,6 +539,7 @@ async function computePlan(){
   list.innerHTML=rows.map(r=>{
     const cond=r.f?[r.f.tide?cap(r.f.tide)+' tide':null,r.f.wsp!=null?oct(r.f.wdr)+' '+r.f.wsp+' kn':null].filter(Boolean).join(', '):'no forecast yet';
     const verdict=ok(r)?(r.rate>=0.6?'Promising':r.rate>=0.35?'Worth a go':'Slow in these conditions')+': caught on '+Math.round(r.rate*r.n)+' of '+r.n+' similar trips':'Not enough trips yet'+(r.all?' ('+r.all+' logged)':'');
+    if(single)return '<div class="card"><b>Your record here</b><div class="sm">'+esc(verdict)+'</div></div>';
     return '<button class="row" data-act="planPick" data-m="'+r.m.id+'"><div><b>'+esc(r.m.name)+'</b><div class="sm">'+esc(verdict)+'</div><div class="mut sm">'+esc(cond)+' · '+r.all+' trip'+(r.all===1?'':'s')+' behind it</div></div><span class="mut">›</span></button>'}).join('');
   const few=none?null:rows.slice().sort((a,b)=>a.all-b.all)[0];
   const tm=document.getElementById('testmark');if(tm&&few&&rows.length>1)tm.innerHTML='<h2>One to test</h2><div class="card"><b>'+esc(few.m.name)+'</b><div class="mut sm">Least fished so far ('+few.all+' trip'+(few.all===1?'':'s')+'). Spending part of a trip here is how the picture gets better.</div></div>';
