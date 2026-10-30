@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='9';
+const VERSION='10';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -167,8 +167,9 @@ const actions={
   skipLoc(){S.profile.done=true;save();go('home')},
   /* flow C: fishing now */
   async startNow(el){
-    el.disabled=true;const pos=await getPos();let m=null;
+    el.disabled=true;const pos=(await getPos())||S.here;let m=null;
     if(pos){m=nearestMark(pos,300);if(!m){m=newMark('Unnamed spot',pos.lat,pos.lng);m.unnamed=true;save()}beginTrip(m,pos)}
+    else if(S.last&&mark(S.last))beginTrip(mark(S.last),null);
     else{pickCtx='start';go('startpick')}
   },
   async startPlanned(el){const p=S.plan,m=p&&mark(p.markId);if(!m)return;el.disabled=true;const pos=await getPos();S.plan=null;save();beginTrip(m,pos)},
