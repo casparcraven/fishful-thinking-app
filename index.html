@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='12';
+const VERSION='13';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -417,13 +417,28 @@ function vPlan(app){
     '<label for="pw">Time window: <b id="pwl"></b></label><input id="pw" type="range" min="0" max="21" value="'+planStart+'">'+
     (w?'<h2>'+(w==='any'?'Best places for this day':esc(mark(w).name)+' · '+dlong(planDay))+'</h2><div id="windline" class="sm"></div><div id="chart" class="card" style="margin-top:8px"><span class="mut">Loading…</span></div>'+
       '<div id="planlist" class="stack" style="margin-top:12px"><span class="mut">Working it out…</span></div><div id="ruled"></div><div id="testmark"></div><div id="planit"></div>'+
-      '<h2>What\'s catching?</h2><div class="card"><p class="sm mut">Ask a Facebook group: copy a ready-written question for this day and paste it in.</p><button class="btn sm wide" data-act="askGroups">Copy a question for the groups</button><textarea id="ask" rows="4" style="display:none;margin-top:10px" aria-label="Question to paste"></textarea></div>'
+      '<h2>What\'s catching?</h2><div id="catching" class="card"><span class="mut">Looking…</span></div>'
       :'<p class="mut" style="margin-top:18px">Choose where, and the tide, wind and your own record for that day appear here.</p>');
   document.getElementById('pday').addEventListener('change',e=>{if(e.target.value){planDay=e.target.value;render()}});
   const pw=document.getElementById('pw');const setL=()=>{document.getElementById('pwl').textContent=String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00'};setL();
   pw.addEventListener('input',()=>{planStart=Number(pw.value);setL();clearTimeout(window._pt);window._pt=setTimeout(()=>{if(planWhere){planDraw();computePlan()}},250)});
   bindPicker();
-  if(w){planDraw();computePlan()}
+  if(w){planDraw();computePlan();whatsCatching()}
+}
+const km=(a,b)=>dist(a,b)/1000;
+async function whatsCatching(){
+  const box=document.getElementById('catching');if(!box)return;
+  const m=planWhere&&planWhere!=='any'?mark(planWhere):null;const pt=m||refPoint();
+  if(!pt){box.innerHTML='<span class="mut">Choose a place to see what is being caught.</span>';return}
+  const since=Date.now()-30*864e5;
+  const near=S.trips.filter(t=>(t.end||t.past)&&t.start>=since&&mark(t.markId)&&km(pt,mark(t.markId))<=40);
+  const fish=near.reduce((n,t)=>n+t.fish.length,0),sp={};near.forEach(t=>t.fish.forEach(f=>{if(f.sp)sp[f.sp]=(sp[f.sp]||0)+1}));
+  let h='<b>Your crew, last 30 days</b><div class="sm" style="margin:4px 0 12px">'+(near.length?near.length+' trip'+(near.length===1?'':'s')+', '+fish+' fish'+(Object.keys(sp).length?': '+Object.entries(sp).sort((a,b)=>b[1]-a[1]).map(([k,v])=>esc(k)+' '+v).join(', '):''):'<span class="mut">No trips near here yet.</span>')+'</div>';
+  let D=null;try{D=await jfetch('catching.json?'+Math.floor(Date.now()/36e5))}catch(e){}
+  if(D){const r=(D.regions||[]).find(r=>pt.lat>=r.box[0]&&pt.lat<=r.box[1]&&pt.lng>=r.box[2]&&pt.lng<=r.box[3]);
+    if(r)h+='<b>'+esc(r.name)+', from recent public reports</b><div class="sm" style="margin:4px 0">'+esc(r.summary)+'</div><div class="mut sm">Checked '+esc(r.checked)+'. '+esc(r.note||'')+'</div><div class="sm" style="margin-top:6px">'+r.sources.map(x=>'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>').join(' · ')+'</div>';
+    else h+='<b>Recent public reports</b><div class="sm mut" style="margin:4px 0">No summary for this area yet. Local reports:</div><div class="sm">'+(D.national||[]).map(x=>'<a href="'+esc(x.u)+'" target="_blank" rel="noopener">'+esc(x.t)+'</a>').join(' · ')+'</div>'}
+  const b2=document.getElementById('catching');if(b2)b2.innerHTML=h;
 }
 actions.where=el=>{planWhere=el.dataset.m;planMark=planWhere==='any'?null:planWhere;render()};
 function planDraw(){const m=planWhere&&planWhere!=='any'?mark(planWhere):null;const r=m||refPoint();const box=document.getElementById('chart');if(!r){if(box)box.innerHTML='<span class="mut">Choose a place to see the tide and wind.</span>';return}
