@@ -53,7 +53,7 @@ button{cursor:pointer}
 #bar .chip[aria-pressed="true"]{background:var(--bg);color:var(--ink)}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 label{display:block;font-weight:700;font-size:14px;margin:12px 0 4px}
-input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{width:100%;min-height:52px;border:2px solid var(--line);border-radius:12px;background:var(--surf);padding:8px 12px}
+input[type=text],input[type=search],input[type=number],input[type=date],input[type=time],select,textarea{width:100%;min-height:52px;border:2px solid var(--line);border-radius:12px;background:var(--surf);padding:8px 12px}
 input[type=range]{width:100%;min-height:48px;accent-color:var(--acc)}
 svg text{fill:var(--mut);font-size:11px}
 .legend{display:flex;gap:16px;font-size:13px;color:var(--mut);margin-top:4px}
@@ -177,12 +177,8 @@ function condLine(t){return esc(condText(t.cond))}
 function vHome(app){
   const t=openTrip();
   if(!t&&!S.marks.length){
-    app.innerHTML='<h1>Where are you going fishing?</h1><p class="mut">Name your first mark. Stand at it (or near it) and the app uses your location to look up the tide and wind there. You can add more marks later, and nobody else sees them.</p>'+
-      '<label for="fm">Mark name or nickname</label><input id="fm" type="text" placeholder="Anything you will recognise" autocomplete="off">'+
-      '<div id="fmxy" style="display:none"><p class="note" style="margin-top:12px">Could not get your location. Enter the position instead.</p><label for="fml">Latitude</label><input id="fml" type="number" step="0.0001" placeholder="e.g. 50.2300"><label for="fmg">Longitude</label><input id="fmg" type="number" step="0.0001" placeholder="e.g. -3.7700"></div>'+
-      '<p style="margin-top:16px"><button class="big" style="min-height:120px;font-size:28px" data-act="firstMark">Save mark and start<small>Uses where you are now</small></button></p>'+
-      '<p><button class="btn sm" data-act="firstMarkNoStart">Save mark only</button></p>';
-    return;
+    app.innerHTML='<h1>Where are you going fishing?</h1><p class="mut">Search for the nearest town, harbour or beach. That is all the app needs to show the tide and wind.</p>'+pickerHtml()+'<p class="sm mut" style="margin-top:14px">You can give the spot your own name afterwards, in Marks.</p>';
+    bindPicker();return;
   }
   if(!t){
     const last=S.last&&mark(S.last)?S.last:S.marks[0].id;
@@ -258,28 +254,44 @@ function vMarks(app){
     return '<button class="row" data-go="mark" data-arg="'+m.id+'"><div><b>'+esc(m.name)+'</b><div class="mut sm">'+(ts.length?'Caught on '+c+' of '+ts.length+' trips':'No trips yet')+'</div></div><span class="mut">›</span></button>'}).join('')+
     '<button class="btn wide" data-go="addmark">+ New mark</button></div>';
 }
-function vAddMark(app){
-  app.innerHTML='<h1>New mark</h1><label for="mn">Name or nickname</label><input id="mn" type="text" placeholder="Anything you will recognise">'+
-    '<label for="ml">Latitude</label><input id="ml" type="number" step="0.0001" value="'+(S.marks[0]?S.marks[0].lat:'')+'"><label for="mg">Longitude</label><input id="mg" type="number" step="0.0001" value="'+(S.marks[0]?S.marks[0].lng:'')+'">'+
-    '<p><button class="btn sm" data-act="here">Use where I am now</button></p><p class="note">Tide and wind come from the nearest point on a weather model, so the position only needs to be roughly right. The mark stays on this phone.</p>'+
-    '<p style="margin-top:14px"><button class="btn pri wide" data-act="saveMark">Save mark</button></p>';
-}
 function newMark(n,lat,lng){const m={id:uid(),name:n,lat,lng};S.marks.push(m);S.last=m.id;save();return m}
-function firstMarkFlow(start){
-  const n=(document.getElementById('fm').value.trim())||'My first mark';
-  const manual=document.getElementById('fmxy');
-  const done=(lat,lng)=>{newMark(n,lat,lng);if(start){actions.startTrip()}else render()};
-  if(manual.style.display!=='none'){const a=Number(document.getElementById('fml').value),b=Number(document.getElementById('fmg').value);if(document.getElementById('fml').value&&document.getElementById('fmg').value&&isFinite(a)&&isFinite(b))done(a,b);return}
-  if(!navigator.geolocation){manual.style.display='block';return}
-  navigator.geolocation.getCurrentPosition(p=>done(+p.coords.latitude.toFixed(4),+p.coords.longitude.toFixed(4)),()=>{manual.style.display='block'},{timeout:10000,maximumAge:60000});
+/* place picker: type a town, harbour or beach, or use the phone's location. No coordinates are ever typed. */
+let placeResults=[],pTimer=null;
+function pickerHtml(){
+  return '<label for="ps">Search a town, harbour or beach</label><input id="ps" type="search" placeholder="e.g. Salcombe" autocomplete="off" enterkeyhint="search">'+
+    '<div id="pres" class="stack" style="margin-top:10px"></div><p id="pmsg" class="note" style="display:none;margin-top:10px"></p>'+
+    '<p class="mut sm" style="margin:16px 0 8px;text-align:center">or</p><button class="btn wide" data-act="useHere">Use where I am now</button>'+
+    '';
 }
-actions.firstMark=()=>firstMarkFlow(true);
-actions.firstMarkNoStart=()=>firstMarkFlow(false);
-actions.here=el=>{if(!navigator.geolocation){el.textContent='Location is not available here';return}
-  navigator.geolocation.getCurrentPosition(p=>{document.getElementById('ml').value=p.coords.latitude.toFixed(4);document.getElementById('mg').value=p.coords.longitude.toFixed(4)},()=>{el.textContent='Could not get location'},{timeout:8000})};
-actions.saveMark=()=>{const n=document.getElementById('mn').value.trim();if(!n)return;const lat=Number(document.getElementById('ml').value),lng=Number(document.getElementById('mg').value);if(!isFinite(lat)||!isFinite(lng))return;
-  const m={id:uid(),name:n,lat,lng};S.marks.push(m);save();go('marks')};
+function pmsg(t){const e=document.getElementById('pmsg');if(!e)return;e.textContent=t||'';e.style.display=t?'block':'none'}
+function bindPicker(){
+  const i=document.getElementById('ps');if(!i)return;
+  i.addEventListener('input',()=>{clearTimeout(pTimer);const q=i.value.trim();if(q.length<3){document.getElementById('pres').innerHTML='';pmsg('');return}pTimer=setTimeout(()=>searchPlaces(q),350)});
+}
+async function searchPlaces(q){
+  const box=document.getElementById('pres');if(!box)return;
+  try{
+    const r=await jfetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=8&language=en&format=json&countryCode=GB');
+    placeResults=(r&&r.results)||[];
+    if(!document.getElementById('pres'))return;
+    pmsg(placeResults.length?'':'No match. Try the nearest town, or use where you are now.');
+    box.innerHTML=placeResults.map((p,k)=>'<button class="row" data-act="pickPlace" data-i="'+k+'"><div><b>'+esc(p.name)+'</b><div class="mut sm">'+esc([p.admin2,p.admin1].filter(Boolean).filter((x,j,a)=>a.indexOf(x)===j).join(', '))+'</div></div><span class="mut">›</span></button>').join('');
+  }catch(e){pmsg('Searching needs a signal. Try again, or use where you are now.')}
+}
+function afterMark(){go(view==='addmark'?'marks':'home')}
+actions.pickPlace=el=>{const p=placeResults[+el.dataset.i];if(!p)return;const nick='';newMark(nick||p.name,+p.latitude.toFixed(4),+p.longitude.toFixed(4));afterMark()};
+actions.useHere=el=>{
+  if(!navigator.geolocation){pmsg('Location is not available on this phone. Search for the nearest town instead.');return}
+  el.textContent='Finding you…';
+  navigator.geolocation.getCurrentPosition(p=>{const nick='';newMark(nick||('Mark '+(S.marks.length+1)),+p.coords.latitude.toFixed(4),+p.coords.longitude.toFixed(4));afterMark()},
+    ()=>{el.textContent='Use where I am now';pmsg('Location is switched off for this app. Search for the nearest town or harbour instead.')},{timeout:12000,maximumAge:60000});
+};
+function vAddMark(app){
+  app.innerHTML='<p><button class="btn sm" data-go="marks">‹ Marks</button></p><h1>Add a mark</h1>'+pickerHtml()+'<p class="note" style="margin-top:14px">The mark stays on this phone. Tide and wind come from the nearest point on a weather model, so roughly right is fine.</p>';
+  bindPicker();
+}
 
+actions.renameMark=el=>{const m=mark(el.dataset.m),v=document.getElementById('rn').value.trim();if(m&&v){m.name=v;save();go('mark',m.id)}};
 function vMark(app){
   const m=mark(viewArg);if(!m){go('marks');return}
   const ts=S.trips.filter(t=>t.markId===m.id&&(t.end||t.past)).sort((a,b)=>a.start-b.start);const c=ts.filter(t=>t.result==='fish').length;
@@ -287,7 +299,8 @@ function vMark(app){
     '<p class="mut">'+(ts.length?'Caught on '+c+' of '+ts.length+' trips.':'No trips here yet.')+(ts.length<5?' <span class="pill t">not enough trips yet</span>':'')+'</p>'+
     '<div class="dots">'+ts.map(t=>'<span class="dot'+(t.result==='fish'?' f':'')+'" title="'+dlong(ymd(new Date(t.start)))+'"></span>').join('')+'</div>'+
     '<div class="legend"><span><span class="dot f"></span> caught</span><span><span class="dot"></span> blank</span></div>'+
-    (m.approx?'<p class="note" style="margin-top:12px">Position is approximate. Edit it by adding the mark again with exact coordinates.</p>':'')+
+    (m.approx?'<p class="note" style="margin-top:12px">Tide and wind for this mark come from the nearest point on a weather model.</p>':'')+
+    '<h2>Your name for this mark</h2><div style="display:flex;gap:8px"><input id="rn" type="text" value="'+esc(m.name)+'" aria-label="Mark name"><button class="btn" data-act="renameMark" data-m="'+m.id+'">Save</button></div>'+
     '<h2>Trips</h2><div class="stack">'+ts.slice().reverse().map(t=>tripRow(t)+'<div style="text-align:right;margin-top:-6px"><button class="chip" data-act="delTrip" data-t="'+t.id+'">Delete trip</button></div>').join('')+'</div>';
 }
 
