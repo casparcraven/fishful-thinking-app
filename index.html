@@ -67,14 +67,14 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='6';
+const VERSION='7';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
 function jget(k,d){try{const j=JSON.parse(localStorage.getItem(k));return j==null?d:j}catch(e){return d}}
 function jset(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 let S=jget(KEY,null)||{marks:[],trips:[],last:null};
-S.profile=S.profile||null;S.plan=S.plan||null;S.here=S.here||null;S.method=S.method||{m:'Lures',bait:''};
+S.profile=S.profile||{mode:null};S.profile.done=true;S.plan=S.plan||null;S.here=S.here||null;S.method=S.method||{m:'Lures',bait:''};
 let CACHE=jget(CKEY,{});
 const save=()=>jset(KEY,S), saveCache=()=>{try{const k=Object.keys(CACHE);if(k.length>400)k.slice(0,100).forEach(x=>delete CACHE[x])}catch(e){}jset(CKEY,CACHE)};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
@@ -160,6 +160,7 @@ function fishBar(t,f){
 /* ---------- actions ---------- */
 const actions={
   /* flow A: first run */
+  setMode2(el){S.profile.mode=el.dataset.m;save();document.querySelectorAll('[data-act=setMode2]').forEach(b=>b.setAttribute('aria-pressed',b===el))},
   obNext(){ob=1;render()},
   setMode(el){S.profile={mode:el.dataset.m,done:false};save();ob=2;render()},
   async allowLoc(el){el.textContent='Finding you…';await getPos();S.profile.done=true;save();go('home')},
@@ -202,8 +203,7 @@ async function finish(t,res){
 /* ---------- views ---------- */
 function render(){
   const app=document.getElementById('app');
-  if(!S.profile||!S.profile.done){document.getElementById('tabs').innerHTML='';app.innerHTML='';onboard(app);return}
-  renderTabs();
+    renderTabs();
   const V={home:vHome,end:vEnd,past:vPast,plan:vPlan,marks:vMarks,mark:vMark,addmark:vAddMark,me:vMe,startpick:vStartPick,name:vName,summary:vSummary,about:vAbout}[view]||vHome;
   app.innerHTML='';V(app);
 }
@@ -230,17 +230,18 @@ function vHome(app){
   const p=S.plan&&mark(S.plan.markId)?S.plan:null;
   app.innerHTML='<h1>Planning a trip, or fishing now?</h1><p id="hl" class="mut sm">&nbsp;</p>'+
     (p?'<div class="card" style="margin:10px 0"><b>Planned: '+esc(mark(p.markId).name)+'</b><div class="mut sm">'+dlong(p.day)+', '+String(p.start).padStart(2,'0')+':00 to '+String((p.start+3)%24).padStart(2,'0')+':00</div><button class="btn sm wide" style="margin-top:8px" data-act="startPlanned">Start this trip</button></div>':'')+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><button class="big" style="font-size:30px;min-height:max(240px,40vh)" data-go="plan">Plan a trip</button><button class="big" style="font-size:30px;min-height:max(240px,40vh);background:var(--tide);color:var(--bg)" data-act="startNow">Fish now</button></div>'+recentHtml()+'<p class="mut sm" style="margin-top:24px;text-align:center">Version '+VERSION+'</p>';
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><button class="big" style="font-size:30px;min-height:max(240px,40vh)" data-go="plan">Plan a trip</button><button class="big" style="font-size:30px;min-height:max(240px,40vh);background:var(--tide);color:var(--bg)" data-act="startNow">Fish now</button></div>'+'<p class="mut" style="margin-top:20px">Built by fishermen who wanted to improve their catch rates by analysing the data. We made it simple and easy for everyone else to improve their fishing. Free, no account, and your trips stay on this phone.</p>'+recentHtml()+'<p class="mut sm" style="margin-top:24px;text-align:center">Version '+VERSION+'</p>';
+  if(navigator.permissions&&navigator.permissions.query)navigator.permissions.query({name:'geolocation'}).then(q=>{if(q.state==='granted'&&!window._gp){window._gp=1;getPos().then(()=>{if(view==='home'&&!openTrip())render()})}}).catch(()=>{});
   const r=refPoint();
   if(r)getDay(r,ymd(new Date())).then(d=>{const e=document.getElementById('hl');if(!e)return;const f=d&&featsAt(d,hourOf(new Date()));e.innerHTML=f?esc(condText(f).replace(/^/,'Right now: ')):'Tide and wind need a signal.'});
-  else{const e=document.getElementById('hl');e.textContent='Tide and wind show once you add a place.'}
+  else{const e=document.getElementById('hl');e.innerHTML='&nbsp;'}
 }
 function vAbout(app){app.innerHTML='<p><button class="btn sm" data-go="home">‹ Back</button></p><h1>What is this?</h1><div class="card" style="font-size:18px;margin-top:10px">'+ABOUT+'</div><p class="mut sm" style="margin-top:12px">Free, no account. Your trips stay on this phone.</p>'}
 
 /* ---------- flow C: fishing now ---------- */
 function vMethod(app,t){
   const m=mark(t.markId);
-  app.innerHTML='<h1>Bait or method</h1><p class="mut">'+esc(m?m.name:'')+(m&&m.unnamed?' (not named yet)':'')+'. Last used is filled in. Set it once for the trip.</p>'+
+  app.innerHTML=(S.profile.mode?'':'<h2>Boat or shore?</h2><div class="chips" style="margin-bottom:8px"><button class="chip" data-act="setMode2" data-m="boat" aria-pressed="false">Boat</button><button class="chip" data-act="setMode2" data-m="shore" aria-pressed="false">Shore</button></div>')+'<h1>Bait or method</h1><p class="mut">'+esc(m?m.name:'')+(m&&m.unnamed?' (not named yet)':'')+'. Last used is filled in. Set it once for the trip.</p>'+
     '<div class="chips" style="margin:14px 0">'+METHODS.map(x=>'<button class="chip" data-act="setMethod" data-s="'+x+'" aria-pressed="'+(S.method.m===x)+'">'+x+'</button>').join('')+'</div>'+
     '<label for="bait">Which bait or lure? (optional)</label><input id="bait" type="text" value="'+esc(S.method.bait)+'" placeholder="e.g. sandeel, 120 mm shad">'+
     '<p style="margin-top:18px"><button class="big" style="min-height:110px;font-size:30px" data-act="goFish">Start fishing</button></p>';
