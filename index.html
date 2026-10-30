@@ -231,8 +231,7 @@ function vHome(app){
   const p=S.plan&&mark(S.plan.markId)?S.plan:null;
   app.innerHTML='<h1>Planning a trip, or fishing now?</h1><p id="hl" class="mut sm">&nbsp;</p>'+
     (p?'<div class="card" style="margin:10px 0"><b>Planned: '+esc(mark(p.markId).name)+'</b><div class="mut sm">'+dlong(p.day)+', '+String(p.start).padStart(2,'0')+':00 to '+String((p.start+3)%24).padStart(2,'0')+':00</div><button class="btn sm wide" style="margin-top:8px" data-act="startPlanned">Start this trip</button></div>':'')+
-    '<div class="stack" style="margin-top:12px"><button class="big" data-go="plan">Planning a trip</button><button class="big" style="background:var(--tide);color:var(--bg)" data-act="startNow">Fishing now<small>One tap to start</small></button></div>'+
-    '<p style="margin-top:18px"><button class="btn sm" data-go="past">Add a past trip</button> <button class="btn sm" data-go="about">What is this?</button></p>'+recentHtml();
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><button class="big" style="font-size:30px;min-height:max(240px,40vh)" data-go="plan">Plan a trip</button><button class="big" style="font-size:30px;min-height:max(240px,40vh);background:var(--tide);color:var(--bg)" data-act="startNow">Fish now</button></div>'+recentHtml();
   const r=refPoint();
   if(r)getDay(r,ymd(new Date())).then(d=>{const e=document.getElementById('hl');if(!e)return;const f=d&&featsAt(d,hourOf(new Date()));e.innerHTML=f?esc(condText(f).replace(/^/,'Right now: ')):'Tide and wind need a signal.'});
   else{const e=document.getElementById('hl');e.textContent='Tide and wind show once you add a place.'}
@@ -503,6 +502,7 @@ function vMe(app){
   const n=S.trips.filter(t=>t.end||t.past).length,b=S.trips.filter(t=>(t.end||t.past)&&t.result==='blank').length,miss=S.trips.filter(t=>(t.end||t.past)&&!t.cond).length;
   app.innerHTML='<h1>Me</h1><p class="mut">'+n+' trips logged, '+b+' of them blank. Everything is saved on this phone.'+(miss?' '+miss+' still need tide and wind.':'')+'</p>'+
     '<h2>Your data</h2><div class="stack"><button class="btn wide" data-act="exportCsv">Show my trips as CSV</button><button class="btn wide" data-act="exportJson">Show a full backup</button></div><textarea id="out" rows="6" style="margin-top:10px;display:none" readonly aria-label="Exported data"></textarea>'+
+    '<h2>More</h2><div class="stack"><button class="btn wide" data-go="past">Add a past trip</button><button class="btn wide" data-go="about">What is this?</button></div>'+
     '<h2>Import past catches</h2><p class="mut sm">Paste rows with: date, time, mark, result (fish or blank), species. A header row is fine. Dates like 2026-08-14 or 14/08/2026.</p><textarea id="inp" rows="5" placeholder="date,time,mark,result,species&#10;2026-08-14,06:30,My first mark,fish,Bass"></textarea>'+
     '<p><button class="btn pri wide" data-act="doImport">Import</button></p><p id="imsg" class="mut sm"></p>'+
     '<h2>About</h2><p class="mut sm">Tide height here is an approximate weather-model value, good enough to see rising or falling water. Official tide tables can replace it later.</p>';
