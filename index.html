@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='5';
+const VERSION='6';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -214,9 +214,7 @@ const ABOUT='<p>Fishful Thinking was built by fishermen who wanted to improve th
 function onboard(app){
   if(ob===0){
     app.innerHTML='<h1>Fishful Thinking</h1><div class="card" style="margin-top:14px;font-size:18px">'+ABOUT+'</div>'+
-      '<div class="stack" style="margin-top:16px"><div class="card"><b>Log a trip in a few taps</b><div class="mut sm">Fish or no fish. Blank days count.</div></div>'+
-      '<div class="card"><b>See what the wind and tide are doing</b><div class="mut sm">Then pick the mark that has worked for you in the same conditions.</div></div>'+
-      '<div class="card"><b>Free, no account</b><div class="mut sm">Your trips stay on this phone.</div></div></div>'+
+      '<p class="mut" style="margin-top:14px">Free. No account. Your trips stay on this phone.</p>'+
       '<p style="margin-top:18px"><button class="big" style="min-height:90px;font-size:26px" data-act="obNext">Get started</button></p>';
   }else if(ob===1){
     app.innerHTML='<h1>Boat or shore?</h1><p class="mut">One tap. It is remembered.</p><div class="stack" style="margin-top:16px"><button class="big" style="min-height:130px;font-size:30px" data-act="setMode" data-m="boat">Boat</button><button class="big" style="min-height:130px;font-size:30px;background:var(--tide);color:var(--bg)" data-act="setMode" data-m="shore">Shore</button></div>';
