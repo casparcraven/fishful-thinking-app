@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='10';
+const VERSION='11';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -379,6 +379,7 @@ function vAddMark(app){
 }
 
 actions.windDir=el=>{const m=mark(el.dataset.m);if(!m)return;let w=m.wind||OCT.slice();const o=el.dataset.o;w=w.includes(o)?w.filter(x=>x!==o):[...w,o];m.wind=w.length===8?null:w;save();el.setAttribute('aria-pressed',!m.wind||m.wind.includes(o))};
+actions.delMark=el=>{const m=mark(el.dataset.m);if(!m)return;S.marks=S.marks.filter(x=>x!==m);S.trips=S.trips.filter(t=>t.markId!==m.id);if(S.last===m.id)S.last=null;if(S.plan&&S.plan.markId===m.id)S.plan=null;save();go('marks')};
 actions.planIt=el=>{S.plan={markId:el.dataset.m,day:planDay,start:planStart};save();go('home')};
 actions.renameMark=el=>{const m=mark(el.dataset.m),v=document.getElementById('rn').value.trim();if(m&&v){m.name=v;save();go('mark',m.id)}};
 function vMark(app){
@@ -394,7 +395,7 @@ function vMark(app){
     '<p style="margin-top:12px"><button class="big" style="min-height:84px;font-size:24px" data-act="planIt" data-m="'+m.id+'">Plan it<small>'+dlong(planDay)+', '+String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00</small></button></p>'+
     '<h2>Wind this mark can take</h2><p class="mut sm">Tap the directions the wind can blow from and you would still fish here. Leave all on if unsure. The plan drops this mark when the wind is from a direction you have turned off.</p><div class="chips">'+OCT.map(o=>'<button class="chip" data-act="windDir" data-m="'+m.id+'" data-o="'+o+'" aria-pressed="'+(!m.wind||m.wind.includes(o))+'">'+o+'</button>').join('')+'</div>'+
     '<h2>Your name for this mark</h2><div style="display:flex;gap:8px"><input id="rn" type="text" value="'+esc(m.name)+'" aria-label="Mark name"><button class="btn" data-act="renameMark" data-m="'+m.id+'">Save</button></div>'+
-    '<h2>Trips</h2><div class="stack">'+ts.slice().reverse().map(t=>tripRow(t)+'<div style="text-align:right;margin-top:-6px"><button class="chip" data-act="delTrip" data-t="'+t.id+'">Delete trip</button></div>').join('')+'</div>';
+    '<p style="margin-top:16px"><button class="chip" data-act="delMark" data-m="'+m.id+'">Delete this mark'+(ts.length?' and its '+ts.length+' trip'+(ts.length===1?'':'s'):'')+'</button></p>'+'<h2>Trips</h2><div class="stack">'+ts.slice().reverse().map(t=>tripRow(t)+'<div style="text-align:right;margin-top:-6px"><button class="chip" data-act="delTrip" data-t="'+t.id+'">Delete trip</button></div>').join('')+'</div>';
 }
 
 /* ---------- plan ---------- */
@@ -415,11 +416,11 @@ function vPlan(app){
   document.getElementById('pday').addEventListener('change',e=>{if(e.target.value){planDay=e.target.value;render()}});
   const pw=document.getElementById('pw');const setL=()=>{document.getElementById('pwl').textContent=String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00'};setL();
   pw.addEventListener('input',()=>{planStart=Number(pw.value);setL();clearTimeout(window._pt);window._pt=setTimeout(()=>{planDraw();computePlan()},250)});
-  bindPicker();planDraw();if(S.marks.length)computePlan();
+  bindPicker();getPos().then(()=>{if(view==='plan')planDraw()});planDraw();if(S.marks.length)computePlan();
 }
 function planDraw(){const r=refPoint();const box=document.getElementById('chart');if(!r){if(box)box.innerHTML='<span class="mut">Add a mark to see the tide and wind.</span>';return}
   drawChart('chart',r,planDay,planStart);
-  getDay(r,planDay).then(d=>{const e=document.getElementById('windline');if(!e||!d)return;const f=featsAt(d,planStart+1);if(f&&f.wsp!=null)e.innerHTML='<b>Wind '+oct(f.wdr)+' '+f.wsp+' kn</b>'+(f.tide?' · '+cap(f.tide)+' tide':'')})}
+  getDay(r,planDay).then(d=>{const e=document.getElementById('windline');if(!e||!d)return;const f=featsAt(d,planStart+1);if(f&&f.wsp!=null)e.innerHTML='<b>Wind '+oct(f.wdr)+' '+f.wsp+' kn</b>'+(f.tide?' · '+cap(f.tide)+' tide':'')+'<div class="mut sm">At '+(r===S.here?'your location':esc(r.name)+' (your location is not available)')+'</div>'})}
 actions.day=el=>{planDay=el.dataset.d;render()};
 actions.askGroups=async()=>{
   const m=mark(planMark)||refPoint();if(!m)return;const nm=m.name||'the coast',day=await getDay(m,planDay),f=day?featsAt(day,planStart+1):null;
