@@ -67,6 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
+const VERSION='5';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -231,7 +232,7 @@ function vHome(app){
   const p=S.plan&&mark(S.plan.markId)?S.plan:null;
   app.innerHTML='<h1>Planning a trip, or fishing now?</h1><p id="hl" class="mut sm">&nbsp;</p>'+
     (p?'<div class="card" style="margin:10px 0"><b>Planned: '+esc(mark(p.markId).name)+'</b><div class="mut sm">'+dlong(p.day)+', '+String(p.start).padStart(2,'0')+':00 to '+String((p.start+3)%24).padStart(2,'0')+':00</div><button class="btn sm wide" style="margin-top:8px" data-act="startPlanned">Start this trip</button></div>':'')+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><button class="big" style="font-size:30px;min-height:max(240px,40vh)" data-go="plan">Plan a trip</button><button class="big" style="font-size:30px;min-height:max(240px,40vh);background:var(--tide);color:var(--bg)" data-act="startNow">Fish now</button></div>'+recentHtml();
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><button class="big" style="font-size:30px;min-height:max(240px,40vh)" data-go="plan">Plan a trip</button><button class="big" style="font-size:30px;min-height:max(240px,40vh);background:var(--tide);color:var(--bg)" data-act="startNow">Fish now</button></div>'+recentHtml()+'<p class="mut sm" style="margin-top:24px;text-align:center">Version '+VERSION+'</p>';
   const r=refPoint();
   if(r)getDay(r,ymd(new Date())).then(d=>{const e=document.getElementById('hl');if(!e)return;const f=d&&featsAt(d,hourOf(new Date()));e.innerHTML=f?esc(condText(f).replace(/^/,'Right now: ')):'Tide and wind need a signal.'});
   else{const e=document.getElementById('hl');e.textContent='Tide and wind show once you add a place.'}
@@ -514,6 +515,8 @@ actions.doImport=()=>{const v=document.getElementById('inp').value;document.getE
 render();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 fillMissing();
+/* self-heal: if the live copy is newer than this one, drop saved copies and reload once */
+fetch('index.html?chk='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(t=>{const m=t.match(/const VERSION='([^']+)'/);if(m&&m[1]!==VERSION&&!sessionStorage.getItem('healed')){sessionStorage.setItem('healed','1');(navigator.serviceWorker?navigator.serviceWorker.getRegistrations():Promise.resolve([])).then(rs=>Promise.all(rs.map(r=>r.unregister()))).then(()=>caches.keys()).then(k=>Promise.all(k.map(x=>caches.delete(x)))).then(()=>location.reload())}}).catch(()=>{});
 </script>
 </body>
 </html>
