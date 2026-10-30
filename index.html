@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='11';
+const VERSION='12';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -365,7 +365,7 @@ async function searchPlaces(q){
     box.innerHTML=placeResults.map((p,k)=>'<button class="row" data-act="pickPlace" data-i="'+k+'"><div><b>'+esc(p.name)+'</b><div class="mut sm">'+esc([p.admin2,p.admin1].filter(Boolean).filter((x,j,a)=>a.indexOf(x)===j).join(', '))+'</div></div><span class="mut">›</span></button>').join('');
   }catch(e){pmsg('Searching needs a signal. Try again, or use where you are now.')}
 }
-function afterMark(m){if(pickCtx==='start'){beginTrip(m,S.here);return}go(pickCtx==='plan'?'plan':(view==='addmark'?'marks':'home'))}
+function afterMark(m){if(pickCtx==='start'){beginTrip(m,S.here);return}if(pickCtx==='plan'){planWhere=m.id;planMark=m.id}go(pickCtx==='plan'?'plan':(view==='addmark'?'marks':'home'))}
 actions.pickPlace=el=>{const p=placeResults[+el.dataset.i];if(!p)return;const nick='';afterMark(newMark(nick||p.name,+p.latitude.toFixed(4),+p.longitude.toFixed(4)))};
 actions.useHere=el=>{
   if(!navigator.geolocation){pmsg('Location is not available on this phone. Search for the nearest town instead.');return}
@@ -403,24 +403,32 @@ function planDays(){const t=ymd(new Date());const dow=new Date(t+'T12:00:00Z').g
   const sat=addDays(t,(6-dow+7)%7||7), sun=addDays(sat,1);
   if(dow===6){out.push(['Sunday',addDays(t,1)])}else if(dow===0){out.push(['Next Sat',sat])}else{out.push(['Sat',sat],['Sun',sun])}
   const seen=new Set();return out.filter(([,d])=>!seen.has(d)&&seen.add(d)).slice(0,4)}
+let planWhere=null;
 function vPlan(app){
   pickCtx='plan';
-  const days=planDays();
-  app.innerHTML='<h1>Pick a day</h1><div class="chips">'+days.map(([l,d])=>'<button class="chip" data-act="day" data-d="'+d+'" aria-pressed="'+(planDay===d)+'">'+l+'</button>').join('')+
+  if(planWhere&&planWhere!=='any'&&!mark(planWhere))planWhere=null;
+  const days=planDays(),w=planWhere;
+  app.innerHTML='<h1>Where are you going?</h1>'+
+    '<div class="chips" style="margin:10px 0">'+S.marks.map(m=>'<button class="chip" data-act="where" data-m="'+m.id+'" aria-pressed="'+(w===m.id)+'">'+esc(m.name)+'</button>').join('')+
+    '<button class="chip" data-act="where" data-m="any" aria-pressed="'+(w==='any')+'">Not sure yet</button></div>'+
+    pickerHtml().replace('Search a town, harbour or beach','Somewhere new: search a town, harbour or beach')+
+    '<h1 style="margin-top:26px">When?</h1><div class="chips" style="margin-top:10px">'+days.map(([l,d])=>'<button class="chip" data-act="day" data-d="'+d+'" aria-pressed="'+(planDay===d)+'">'+l+'</button>').join('')+
     '</div><div style="margin-top:10px"><input id="pday" type="date" value="'+planDay+'" aria-label="Pick a day"></div>'+
-    '<h2>Wind and tide · '+dlong(planDay)+'</h2><div id="windline" class="sm"></div><div id="chart" class="card" style="margin-top:8px"><span class="mut">Loading…</span></div>'+
     '<label for="pw">Time window: <b id="pwl"></b></label><input id="pw" type="range" min="0" max="21" value="'+planStart+'">'+
-    (S.marks.length?'<h2>Best places for this day</h2><div id="planlist" class="stack"><span class="mut">Working it out…</span></div><div id="ruled"></div><div id="testmark"></div>':
-      '<h2>Add your first mark</h2><p class="mut sm">Search for the nearest town, harbour or beach, or use where you are now.</p>'+pickerHtml())+
-    '<h2>What\'s catching?</h2><div class="card"><p class="sm mut">Ask a Facebook group: copy a ready-written question for this day and paste it in.</p><button class="btn sm wide" data-act="askGroups">Copy a question for the groups</button><textarea id="ask" rows="4" style="display:none;margin-top:10px" aria-label="Question to paste"></textarea></div>';
+    (w?'<h2>'+(w==='any'?'Best places for this day':esc(mark(w).name)+' · '+dlong(planDay))+'</h2><div id="windline" class="sm"></div><div id="chart" class="card" style="margin-top:8px"><span class="mut">Loading…</span></div>'+
+      '<div id="planlist" class="stack" style="margin-top:12px"><span class="mut">Working it out…</span></div><div id="ruled"></div><div id="testmark"></div><div id="planit"></div>'+
+      '<h2>What\'s catching?</h2><div class="card"><p class="sm mut">Ask a Facebook group: copy a ready-written question for this day and paste it in.</p><button class="btn sm wide" data-act="askGroups">Copy a question for the groups</button><textarea id="ask" rows="4" style="display:none;margin-top:10px" aria-label="Question to paste"></textarea></div>'
+      :'<p class="mut" style="margin-top:18px">Choose where, and the tide, wind and your own record for that day appear here.</p>');
   document.getElementById('pday').addEventListener('change',e=>{if(e.target.value){planDay=e.target.value;render()}});
   const pw=document.getElementById('pw');const setL=()=>{document.getElementById('pwl').textContent=String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00'};setL();
-  pw.addEventListener('input',()=>{planStart=Number(pw.value);setL();clearTimeout(window._pt);window._pt=setTimeout(()=>{planDraw();computePlan()},250)});
-  bindPicker();getPos().then(()=>{if(view==='plan')planDraw()});planDraw();if(S.marks.length)computePlan();
+  pw.addEventListener('input',()=>{planStart=Number(pw.value);setL();clearTimeout(window._pt);window._pt=setTimeout(()=>{if(planWhere){planDraw();computePlan()}},250)});
+  bindPicker();
+  if(w){planDraw();computePlan()}
 }
-function planDraw(){const r=refPoint();const box=document.getElementById('chart');if(!r){if(box)box.innerHTML='<span class="mut">Add a mark to see the tide and wind.</span>';return}
+actions.where=el=>{planWhere=el.dataset.m;planMark=planWhere==='any'?null:planWhere;render()};
+function planDraw(){const m=planWhere&&planWhere!=='any'?mark(planWhere):null;const r=m||refPoint();const box=document.getElementById('chart');if(!r){if(box)box.innerHTML='<span class="mut">Choose a place to see the tide and wind.</span>';return}
   drawChart('chart',r,planDay,planStart);
-  getDay(r,planDay).then(d=>{const e=document.getElementById('windline');if(!e||!d)return;const f=featsAt(d,planStart+1);if(f&&f.wsp!=null)e.innerHTML='<b>Wind '+oct(f.wdr)+' '+f.wsp+' kn</b>'+(f.tide?' · '+cap(f.tide)+' tide':'')+'<div class="mut sm">At '+(r===S.here?'your location':esc(r.name)+' (your location is not available)')+'</div>'})}
+  getDay(r,planDay).then(d=>{const e=document.getElementById('windline');if(!e||!d)return;const f=featsAt(d,planStart+1);if(f&&f.wsp!=null)e.innerHTML='<b>Wind '+oct(f.wdr)+' '+f.wsp+' kn</b>'+(f.tide?' · '+cap(f.tide)+' tide':'')+'<div class="mut sm">At '+(m?esc(m.name):(r===S.here?'your location':esc(r.name)))+'</div>'})}
 actions.day=el=>{planDay=el.dataset.d;render()};
 actions.askGroups=async()=>{
   const m=mark(planMark)||refPoint();if(!m)return;const nm=m.name||'the coast',day=await getDay(m,planDay),f=day?featsAt(day,planStart+1):null;
@@ -444,7 +452,8 @@ async function drawChart(id,m,date,start){
 async function computePlan(){
   const list=document.getElementById('planlist');if(!list)return;const mid=planStart+1;
   const rows=[];
-  for(const m of S.marks){
+  const single=planWhere&&planWhere!=='any'?mark(planWhere):null;
+  for(const m of (single?[single]:S.marks)){
     const day=await getDay(m,planDay);const f=day?featsAt(day,mid):null;
     const ts=S.trips.filter(t=>t.markId===m.id&&(t.end||t.past)&&t.cond);const all=S.trips.filter(t=>t.markId===m.id&&(t.end||t.past));
     let num=0,den=0,n=0;
@@ -459,11 +468,12 @@ async function computePlan(){
   }
   const ok=r=>r.all>=5&&r.n>=2;
   const out=rows.filter(r=>!r.windOk);let keep=rows.filter(r=>r.windOk),none=false;
-  if(!keep.length){keep=rows.slice();none=true}
+  if(single){keep=rows.slice()}else if(!keep.length){keep=rows.slice();none=true}
   rows.length=0;keep.forEach(r=>rows.push(r));
   rows.sort((a,b)=>(ok(b)-ok(a))||((b.rate||0)-(a.rate||0))||b.all-a.all);
   if(!document.getElementById('planlist'))return;
   planMark=rows[0]?rows[0].m.id:null;
+  const pi=document.getElementById('planit');if(pi&&single)pi.innerHTML='<button class="big" style="min-height:84px;font-size:24px;margin-top:12px" data-act="planIt" data-m="'+single.id+'">Plan it<small>'+dlong(planDay)+', '+String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00</small></button>'+(rows[0]&&!rows[0].windOk?'<p class="note" style="margin-top:10px">The wind is from a direction you marked as poor here.</p>':'');
   const ru=document.getElementById('ruled');
   if(ru)ru.innerHTML=none?'<p class="note">Nothing fits this wind. These are the least bad, and the wind is against them.</p>':(out.length?'<p class="mut sm" style="margin-top:8px">Left out because of the wind: '+out.map(r=>esc(r.m.name)).join(', ')+'.</p>':'');
   list.innerHTML=rows.map(r=>{
