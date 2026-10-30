@@ -67,7 +67,7 @@ svg text{fill:var(--mut);font-size:11px}
 <nav class="tabs" id="tabs" aria-label="Main"></nav>
 <script>
 'use strict';
-const VERSION='16';
+const VERSION='18';
 /* ---------- storage ---------- */
 const KEY='fishful.v1', CKEY='fishful.cache.v1';
 const DEF_SPECIES=['Bass','Pollack','Mackerel','Wrasse','Other'];
@@ -232,7 +232,7 @@ function vHome(app){
   if(t)return vFishing(app,t);
   const p=S.plan&&mark(S.plan.markId)?S.plan:null;
   app.innerHTML='<h1>Planning a trip, or fishing now?</h1><p id="hl" class="mut sm">&nbsp;</p>'+
-    (p?'<div class="card" style="margin:10px 0"><b>Planned: '+esc(mark(p.markId).name)+'</b><div class="mut sm">'+dlong(p.day)+', '+String(p.start).padStart(2,'0')+':00 to '+String((p.start+3)%24).padStart(2,'0')+':00</div><button class="btn sm wide" style="margin-top:8px" data-act="startPlanned">Start this trip</button></div>':'')+
+    (p?'<div class="card" style="margin:10px 0"><b>Planned: '+esc(mark(p.markId).name)+'</b><div class="mut sm">'+dlong(p.day)+'</div><button class="btn sm wide" style="margin-top:8px" data-act="startPlanned">Start this trip</button></div>':'')+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><button class="big" style="font-size:30px;min-height:max(240px,40vh)" data-go="plan">Plan a trip</button><button class="big" style="font-size:30px;min-height:max(240px,40vh);background:var(--tide);color:var(--bg)" data-act="startNow">Fish now</button></div>'+'<p class="mut" style="margin-top:20px">Built by fishermen who wanted to improve their catch rates by analysing the data. We made it simple and easy for everyone else to improve their fishing. Free, no account, and your trips stay on this phone.</p>'+recentHtml()+'<p class="mut sm" style="margin-top:24px;text-align:center">Version '+VERSION+'</p>';
   if(navigator.permissions&&navigator.permissions.query)navigator.permissions.query({name:'geolocation'}).then(q=>{if(q.state==='granted'&&!window._gp){window._gp=1;getPos().then(()=>{if(view==='home'&&!openTrip())render()})}}).catch(()=>{});
   const r=refPoint();
@@ -392,7 +392,7 @@ function vMark(app){
     '<div class="legend"><span><span class="dot f"></span> caught</span><span><span class="dot"></span> blank</span></div>'+
     (m.approx?'<p class="note" style="margin-top:12px">Tide and wind for this mark come from the nearest point on a weather model.</p>':'')+
     '<h2>'+dlong(planDay)+'</h2><div id="mchart" class="card"><span class="mut">Loading…</span></div>'+
-    '<p style="margin-top:12px"><button class="big" style="min-height:84px;font-size:24px" data-act="planIt" data-m="'+m.id+'">Plan it<small>'+dlong(planDay)+', '+String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00</small></button></p>'+
+    '<p style="margin-top:12px"><button class="big" style="min-height:84px;font-size:24px" data-act="planIt" data-m="'+m.id+'">Plan it<small>'+dlong(planDay)+'</small></button></p>'+
     '<h2>Wind this mark can take</h2><p class="mut sm">Tap the directions the wind can blow from and you would still fish here. Leave all on if unsure. The plan drops this mark when the wind is from a direction you have turned off.</p><div class="chips">'+OCT.map(o=>'<button class="chip" data-act="windDir" data-m="'+m.id+'" data-o="'+o+'" aria-pressed="'+(!m.wind||m.wind.includes(o))+'">'+o+'</button>').join('')+'</div>'+
     '<h2>Your name for this mark</h2><div style="display:flex;gap:8px"><input id="rn" type="text" value="'+esc(m.name)+'" aria-label="Mark name"><button class="btn" data-act="renameMark" data-m="'+m.id+'">Save</button></div>'+
     '<p style="margin-top:16px"><button class="chip" data-act="delMark" data-m="'+m.id+'">Delete this mark'+(ts.length?' and its '+ts.length+' trip'+(ts.length===1?'':'s'):'')+'</button></p>'+'<h2>Trips</h2><div class="stack">'+ts.slice().reverse().map(t=>tripRow(t)+'<div style="text-align:right;margin-top:-6px"><button class="chip" data-act="delTrip" data-t="'+t.id+'">Delete trip</button></div>').join('')+'</div>';
@@ -416,24 +416,17 @@ function vPlan(app){
       pickerHtml();
     bindPicker();return;
   }
-  if(planStep===2){
-    app.innerHTML=planHead()+'<h1>When?</h1><div class="chips" style="margin-top:10px">'+days.map(([l,d])=>'<button class="chip" data-act="day" data-d="'+d+'" aria-pressed="'+(planDay===d)+'">'+l+'</button>').join('')+
-      '</div><div style="margin-top:10px"><input id="pday" type="date" value="'+planDay+'" aria-label="Pick a day"></div>'+
-      '<label for="pw">Time window: <b id="pwl"></b></label><input id="pw" type="range" min="0" max="21" value="'+planStart+'">'+
-      '<p style="margin-top:18px"><button class="big" style="min-height:90px;font-size:26px" data-act="planNext">Show me</button></p>';
-    document.getElementById('pday').addEventListener('change',e=>{if(e.target.value){planDay=e.target.value;render()}});
-    const pw=document.getElementById('pw');const setL=()=>{document.getElementById('pwl').textContent=String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00'};setL();
-    pw.addEventListener('input',()=>{planStart=Number(pw.value);setL()});return;
-  }
-  const mk=w!=='any'?mark(w):null;
-  app.innerHTML=planHead()+'<h1>'+(mk?esc(mk.name):'Best places')+'</h1><p class="mut">'+dlong(planDay)+', '+String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00</p>'+
-    '<div id="chart" class="card" style="margin-top:8px"><span class="mut">Loading…</span></div><div id="windline"></div>'+
-    '<div id="planlist" class="stack" style="margin-top:12px"><span class="mut">Working it out…</span></div><div id="ruled"></div><div id="testmark"></div><div id="planit"></div>'+
-    '<h2>What\'s catching?</h2><div id="catching" class="card"><span class="mut">Looking…</span></div>';
-  planDraw();computePlan();whatsCatching();
+  const mk=mark(w);
+  app.innerHTML=planHead()+'<h1>'+esc(mk.name)+'</h1><h2 style="margin-top:6px">When?</h2><div class="chips">'+days.map(([l,d])=>'<button class="chip" data-act="day" data-d="'+d+'" aria-pressed="'+(planDay===d)+'">'+l+'</button>').join('')+
+    '</div><div style="margin-top:10px"><input id="pday" type="date" value="'+planDay+'" aria-label="Pick a day"></div>'+
+    '<div id="chart" class="card" style="margin-top:12px"><span class="mut">Loading…</span></div>'+
+    '<div id="planlist" style="margin-top:12px"></div><div id="planit"></div>'+
+    '<h2>What\'s catching?</h2><div id="catching" class="card"><span class="mut">Looking…</span></div><h2>Weather map</h2><div id="wmap"></div>';
+  document.getElementById('pday').addEventListener('change',e=>{if(e.target.value){planDay=e.target.value;render()}});
+  tideWeather('chart',mk,planDay,planStart,false,true);computePlan();whatsCatching();document.getElementById('wmap').innerHTML=mapHtml(mk);
 }
 actions.planBack=()=>{planStep=Math.max(1,planStep-1);render()};
-actions.planNext=()=>{planStep=3;render()};
+
 const km=(a,b)=>dist(a,b)/1000;
 async function whatsCatching(){
   const box=document.getElementById('catching');if(!box)return;
@@ -478,7 +471,14 @@ function springNeap(date){
 }
 const WC=c=>c==null?'':c===0?'Clear':c<=2?'Mostly clear':c===3?'Overcast':c<=48?'Fog':c<=57?'Drizzle':c<=67?'Rain':c<=77?'Snow':c<=82?'Showers':c<=86?'Snow showers':'Thunderstorms';
 const clock=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-async function tideWeather(id,m,date,start,withMap){
+function mapHtml(m){return '<iframe title="Weather map" loading="lazy" style="width:100%;height:280px;border:0;border-radius:12px;margin-top:12px" src="https://embed.windy.com/embed2.html?lat='+m.lat+'&lon='+m.lng+'&detailLat='+m.lat+'&detailLon='+m.lng+'&zoom=9&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1"></iframe>'}
+function periodRows(day){
+  const P=[['Morning',6,11],['Afternoon',12,17],['Evening',18,22]];
+  const av=(a,x,y)=>{const v=[];for(let h=x;h<=y;h++)if(a&&a[h]!=null)v.push(a[h]);return v.length?v.reduce((p,q)=>p+q,0)/v.length:null};
+  return '<div style="margin-top:14px">'+P.map(([n,x,y])=>{const w=av(day.wsp,x,y),d=av(day.wdr,(x+y)>>1,(x+y)>>1),t=av(day.tmp,x,y),r=day.rain?av(day.rain,x,y)*(y-x+1):null,c=day.wc?day.wc[(x+y)>>1]:null;
+    return '<div style="display:grid;grid-template-columns:86px 1fr;gap:8px;padding:8px 0;border-top:1px solid var(--line)"><b>'+n+'</b><div class="sm">'+(w!=null?'<b>'+oct(d)+' '+Math.round(w)+' kn</b>':'')+(c!=null?' · '+WC(c):'')+(t!=null?' · '+Math.round(t)+'°C':'')+(r!=null&&r>=0.1?' · rain '+r.toFixed(1)+' mm':'')+'</div></div>'}).join('')+'</div>';
+}
+async function tideWeather(id,m,date,start,withMap,periods){
   const box=document.getElementById(id);if(!box||!m)return;const day=await getDay(m,date);const b2=document.getElementById(id);if(!b2)return;
   if(!day||!day.lvl||day.lvl.every(x=>x==null)){b2.innerHTML='<span class="mut">No tide or weather forecast yet. Connect to the internet once and it is saved on the phone.</span>';return}
   const ex=extremes(day.lvl),v=day.lvl.filter(x=>x!=null),rg=Math.max(...v)-Math.min(...v),sn=springNeap(date);
@@ -489,12 +489,12 @@ async function tideWeather(id,m,date,start,withMap){
     '<div class="sm" style="margin-top:12px"><b>'+sn.lab+'</b> · range about '+rg.toFixed(1)+' m</div>'+
     '<div style="position:relative;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--line),var(--tide));margin:8px 0 2px"><div style="position:absolute;top:-4px;left:calc('+Math.round(sn.v*100)+'% - 11px);width:22px;height:22px;border-radius:50%;background:var(--acc);border:3px solid var(--surf)"></div></div>'+
     '<div class="legend" style="justify-content:space-between"><span>Neaps</span><span>Springs</span></div>'+
+    (periods?periodRows(day):
     '<div class="sm" style="margin-top:14px"><b>'+String(start).padStart(2,'0')+':00 to '+String((start+3)%24).padStart(2,'0')+':00</b></div>'+
     '<div class="sm">'+(wc!=null?WC(wc)+(tmp!=null?', ':''):'')+(tmp!=null?Math.round(tmp)+'°C':'')+'</div>'+
     (wsp!=null?'<div class="sm">Wind '+oct(wdr)+' '+Math.round(wsp)+' kn'+(gst>0?', gusts '+Math.round(gst):'')+'</div>':'')+
-    ((rain!=null&&day.rain)?'<div class="sm">Rain '+(rain<0.1?'none':rain.toFixed(1)+' mm')+(cld!=null?' · cloud '+Math.round(cld)+'%':'')+(prs!=null?' · '+Math.round(prs)+' hPa':'')+'</div>':'')+
+    ((rain!=null&&day.rain)?'<div class="sm">Rain '+(rain<0.1?'none':rain.toFixed(1)+' mm')+(cld!=null?' · cloud '+Math.round(cld)+'%':'')+'</div>':''))+
     '<div class="mut sm" style="margin-top:10px">Tide times and range are from a weather model, so treat them as about right, within half an hour.</div>';
-  if(withMap)h+='<iframe title="Weather map" loading="lazy" style="width:100%;height:280px;border:0;border-radius:12px;margin-top:12px" src="https://embed.windy.com/embed2.html?lat='+m.lat+'&lon='+m.lng+'&detailLat='+m.lat+'&detailLon='+m.lng+'&zoom=9&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1"></iframe>';
   b2.innerHTML=h;
 }
 async function drawChart(id,m,date,start){
@@ -510,39 +510,24 @@ async function drawChart(id,m,date,start){
     '<div class="legend"><span>Blue line: tide height (approximate model)</span><span>Arrows: wind, knots</span></div>';
 }
 async function computePlan(){
-  const list=document.getElementById('planlist');if(!list)return;const mid=planStart+1;
-  const rows=[];
-  const single=planWhere&&planWhere!=='any'?mark(planWhere):null;
-  for(const m of (single?[single]:S.marks)){
-    const day=await getDay(m,planDay);const f=day?featsAt(day,mid):null;
-    const ts=S.trips.filter(t=>t.markId===m.id&&(t.end||t.past)&&t.cond);const all=S.trips.filter(t=>t.markId===m.id&&(t.end||t.past));
-    let num=0,den=0,n=0;
+  const list=document.getElementById('planlist');const m=planWhere&&mark(planWhere);if(!list||!m)return;
+  const day=await getDay(m,planDay);
+  const all=S.trips.filter(t=>t.markId===m.id&&(t.end||t.past)),ts=all.filter(t=>t.cond);
+  const res=[['morning',8],['afternoon',14],['evening',19]].map(([name,mid])=>{
+    const f=day?featsAt(day,mid):null;let num=0,den=0,n=0;
     if(f)for(const t of ts){let w=0,mx=0;const c=t.cond;
       if(f.tide&&c.tide){mx+=2;if(f.tide===c.tide)w+=2}
       if(f.wdr!=null&&c.wdr!=null){mx+=1;const d=Math.abs(f.wdr-c.wdr)%360;if(Math.min(d,360-d)<=45)w+=1}
       if(f.wsp!=null&&c.wsp!=null){mx+=1;if(Math.abs(f.wsp-c.wsp)<=5)w+=1}
-      if(c.h!=null){mx+=1;if(Math.abs(f.h-c.h)<=3)w+=1}
+      if(c.h!=null){mx+=1;if(Math.abs(mid-c.h)<=3)w+=1}
       if(mx>=3&&w>=Math.ceil(mx*0.6)){n++;den+=w;if(t.result==='fish')num+=w}}
-    const windOk=!(f&&f.wdr!=null&&m.wind&&!m.wind.includes(oct(f.wdr)));
-    rows.push({m,f,windOk,all:all.length,n,rate:den?num/den:null,caught:ts.filter(t=>t.result==='fish').length});
-  }
-  const ok=r=>r.all>=5&&r.n>=2;
-  const out=rows.filter(r=>!r.windOk);let keep=rows.filter(r=>r.windOk),none=false;
-  if(single){keep=rows.slice()}else if(!keep.length){keep=rows.slice();none=true}
-  rows.length=0;keep.forEach(r=>rows.push(r));
-  rows.sort((a,b)=>(ok(b)-ok(a))||((b.rate||0)-(a.rate||0))||b.all-a.all);
+    return{name,n,rate:den?num/den:null,f}}).filter(r=>r.n>=2).sort((a,b)=>b.rate-a.rate);
+  const best=res[0];
+  const verdict=(all.length>=5&&best)?(best.rate>=0.6?'Promising':best.rate>=0.35?'Worth a go':'Slow')+' in the '+best.name+': caught on '+Math.round(best.rate*best.n)+' of '+best.n+' similar trips':'Not enough trips here yet'+(all.length?' ('+all.length+' logged)':'');
+  const f14=day?featsAt(day,14):null;const bad=f14&&f14.wdr!=null&&m.wind&&!m.wind.includes(oct(f14.wdr));
   if(!document.getElementById('planlist'))return;
-  planMark=rows[0]?rows[0].m.id:null;
-  const pi=document.getElementById('planit');if(pi&&single)pi.innerHTML='<button class="big" style="min-height:84px;font-size:24px;margin-top:12px" data-act="planIt" data-m="'+single.id+'">Plan it<small>'+dlong(planDay)+', '+String(planStart).padStart(2,'0')+':00 to '+String((planStart+3)%24).padStart(2,'0')+':00</small></button>'+(rows[0]&&!rows[0].windOk?'<p class="note" style="margin-top:10px">The wind is from a direction you marked as poor here.</p>':'');
-  const ru=document.getElementById('ruled');
-  if(ru)ru.innerHTML=none?'<p class="note">Nothing fits this wind. These are the least bad, and the wind is against them.</p>':(out.length?'<p class="mut sm" style="margin-top:8px">Left out because of the wind: '+out.map(r=>esc(r.m.name)).join(', ')+'.</p>':'');
-  list.innerHTML=rows.map(r=>{
-    const cond=r.f?[r.f.tide?cap(r.f.tide)+' tide':null,r.f.wsp!=null?oct(r.f.wdr)+' '+r.f.wsp+' kn':null].filter(Boolean).join(', '):'no forecast yet';
-    const verdict=ok(r)?(r.rate>=0.6?'Promising':r.rate>=0.35?'Worth a go':'Slow in these conditions')+': caught on '+Math.round(r.rate*r.n)+' of '+r.n+' similar trips':'Not enough trips yet'+(r.all?' ('+r.all+' logged)':'');
-    if(single)return '<div class="card"><b>Your record here</b><div class="sm">'+esc(verdict)+'</div></div>';
-    return '<button class="row" data-act="planPick" data-m="'+r.m.id+'"><div><b>'+esc(r.m.name)+'</b><div class="sm">'+esc(verdict)+'</div><div class="mut sm">'+esc(cond)+' · '+r.all+' trip'+(r.all===1?'':'s')+' behind it</div></div><span class="mut">›</span></button>'}).join('');
-  const few=none?null:rows.slice().sort((a,b)=>a.all-b.all)[0];
-  const tm=document.getElementById('testmark');if(tm&&few&&rows.length>1)tm.innerHTML='<h2>One to test</h2><div class="card"><b>'+esc(few.m.name)+'</b><div class="mut sm">Least fished so far ('+few.all+' trip'+(few.all===1?'':'s')+'). Spending part of a trip here is how the picture gets better.</div></div>';
+  list.innerHTML='<div class="card"><b>Your record here</b><div class="sm">'+esc(verdict)+'</div></div>'+(bad?'<p class="note" style="margin-top:10px">The wind is from a direction you marked as poor here.</p>':'');
+  const pi=document.getElementById('planit');if(pi)pi.innerHTML='<button class="big" style="min-height:84px;font-size:24px;margin-top:12px" data-act="planIt" data-m="'+m.id+'">Plan it<small>'+dlong(planDay)+'</small></button>';
   fillMissing();
 }
 let filling=false;
