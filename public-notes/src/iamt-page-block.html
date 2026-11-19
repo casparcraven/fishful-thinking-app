@@ -11,7 +11,7 @@
 #iamt .photo{position:absolute;right:30px;top:24px;width:150px;background:#fff;padding:7px 7px 22px;border-radius:6px;transform:rotate(4deg);box-shadow:0 10px 30px rgba(0,0,0,.35)}
 #iamt .photo img{width:100%;display:block;border-radius:3px}
 #iamt .photo span{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;color:#555}
-#iamt .kick{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.8;margin:34px 0 10px;position:relative}
+#iamt .kick{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.8;margin:34px 0 10px;position:relative;max-width:calc(100% - 170px);line-height:1.6}
 #iamt .hero h1{font-size:40px;line-height:1.12;position:relative;color:#fff}
 #iamt .hl{background:#f4dc3a;color:var(--pd);padding:0 8px;border-radius:4px}
 #iamt .hero p{font-size:17px;line-height:1.5;margin:14px 0 0;max-width:470px;opacity:.95;position:relative}
@@ -51,7 +51,7 @@
 #iamt .more a:hover{border-color:var(--p)}
 #iamt .err{color:#b42318;font-size:14px;margin-top:8px;display:none}
 #iamt .thanks{font-size:14px;color:var(--grey);margin-top:22px;line-height:1.5}
-@media(max-width:620px){#iamt .hero{padding:24px 22px 64px;border-radius:0}#iamt .photo{display:none}#iamt .hero h1{font-size:32px}#iamt .card{margin:-44px 10px 0;padding:22px}#iamt .row{grid-template-columns:1fr}#iamt .q{font-size:21px}}
+@media(max-width:620px){#iamt .kick{max-width:none}#iamt .hero{padding:24px 22px 64px;border-radius:0}#iamt .photo{display:none}#iamt .hero h1{font-size:32px}#iamt .card{margin:-44px 10px 0;padding:22px}#iamt .row{grid-template-columns:1fr}#iamt .q{font-size:21px}}
 </style>
 
 <div id="iamt">
@@ -145,7 +145,7 @@
   var steps=root.querySelectorAll('.step'), bars=root.querySelectorAll('#iamt-steps i');
   function show(n){ cur=n; steps.forEach(function(s){ s.classList.toggle('on', +s.getAttribute('data-s')===n); }); bars.forEach(function(b,i){ b.classList.toggle('on', i<Math.min(n,5)); }); document.getElementById('iamt-steps').style.display=n>5?'none':'flex'; if(n===6) fillDone(); var c=root.querySelector('.card'); if(c && c.getBoundingClientRect().top<0) c.scrollIntoView({behavior:'smooth'}); }
   function fillDone(){ var c=document.getElementById('iamt-commit'); if(d.change){ c.style.display='block'; c.textContent=''; var b=document.createElement('b'); b.textContent='Your one small change: '; c.appendChild(b); c.appendChild(document.createTextNode(d.change)); } else c.style.display='none'; }
-  root.querySelectorAll('.opts').forEach(function(g){ var key=g.getAttribute('data-key'); g.querySelectorAll('.opt').forEach(function(o){ o.addEventListener('click',function(){ g.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); o.classList.add('sel'); d[key]=o.getAttribute('data-v'); if(key==='referral'){ document.getElementById('iamt-ref').style.display=d.referral==='Yes'?'block':'none'; return; } setTimeout(function(){ show(cur+1); },250); }); }); });
+  root.querySelectorAll('.opts').forEach(function(g){ var key=g.getAttribute('data-key'); g.querySelectorAll('.opt').forEach(function(o){ o.addEventListener('click',function(){ g.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); o.classList.add('sel'); d[key]=o.getAttribute('data-v'); if(key==='referral'){ document.getElementById('iamt-ref').style.display=d.referral==='Yes'?'block':'none'; if(d.referral==='Yes') return; } setTimeout(function(){ show(cur+1); },250); }); }); });
   root.querySelectorAll('[data-skip]').forEach(function(b){ b.addEventListener('click',function(){ show(cur+1); }); });
   root.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click',function(){ show(Math.max(1,cur-1)); }); });
   root.querySelectorAll('[data-next]').forEach(function(b){ b.addEventListener('click',function(){ if(cur===3) d.change=document.getElementById('iamt-change').value.trim(); if(cur===4){ var w=document.getElementById('iamt-refwho').value.trim(); if(d.referral==='Yes'&&w) d.referral='Yes: '+w; } show(cur+1); }); });
