@@ -40,6 +40,12 @@
 #iamt .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--p);color:#fff;border:0;border-radius:999px;padding:14px 26px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;font-family:inherit}
 #iamt .btn:hover{background:var(--pd)}
 #iamt .link{background:none;border:0;color:var(--grey);font-size:14px;cursor:pointer;text-decoration:underline;font-family:inherit;padding:6px 0}
+#iamt .choice{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#iamt .ch{display:flex;flex-direction:column;gap:8px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:18px;cursor:pointer;font-family:inherit;color:var(--ink);text-decoration:none;transition:border-color .15s,background .15s}
+#iamt .ch:hover{border-color:var(--p);background:#faf7fd}
+#iamt .ch b{font-size:17px}
+#iamt .ch span{color:var(--grey);font-size:14px;line-height:1.45;flex:1}
+#iamt .ch i{font-style:normal;font-weight:700;color:var(--p);font-size:15px}
 #iamt .step{display:none}
 #iamt .step.on{display:block;animation:iamtIn .25s ease}
 @keyframes iamtIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -51,7 +57,7 @@
 #iamt .more a:hover{border-color:var(--p)}
 #iamt .err{color:#b42318;font-size:14px;margin-top:8px;display:none}
 #iamt .thanks{font-size:14px;color:var(--grey);margin-top:22px;line-height:1.5}
-@media(max-width:620px){#iamt .kick{max-width:none}#iamt .hero{padding:24px 22px 64px;border-radius:0}#iamt .photo{display:none}#iamt .hero h1{font-size:32px}#iamt .card{margin:-44px 10px 0;padding:22px}#iamt .row{grid-template-columns:1fr}#iamt .q{font-size:21px}}
+@media(max-width:620px){#iamt .choice{grid-template-columns:1fr}#iamt .kick{max-width:none}#iamt .hero{padding:24px 22px 64px;border-radius:0}#iamt .photo{display:none}#iamt .hero h1{font-size:32px}#iamt .card{margin:-44px 10px 0;padding:22px}#iamt .row{grid-template-columns:1fr}#iamt .q{font-size:21px}}
 </style>
 
 <div id="iamt">
@@ -60,13 +66,22 @@
     <div class="photo"><img src="https://images.squarespace-cdn.com/content/v1/580f366bc534a5c144fe5dee/a4d2b97d-a254-4323-bd77-0a2e8de31967/caspar-chart-pink.jpg" alt="Caspar Craven on stage"><span>Redrawing the chart.</span></div>
     <div class="kick">IAMT Annual Conference &amp; Awards · Richmond Hill Hotel · 2 December 2026</div>
     <h1>Big Bold <span class="hl">Transformation</span></h1>
-    <p>Thank you, IAMT. Five quick questions and your notes are yours: the three questions, the charts I had to redraw, and space to redraw your own.</p>
+    <p>Thank you, IAMT. Here are your notes from today: the three questions, the charts I had to redraw, and space to redraw your own.</p>
   </div>
 
   <div class="card">
     <div class="steps" id="iamt-steps"><i></i><i></i><i></i><i></i><i></i></div>
 
-    <div class="step on" data-s="1">
+    <div class="step on" data-s="0">
+      <div class="lab">Your notes</div>
+      <div class="q mw" style="margin-bottom:16px">How would you like them?</div>
+      <div class="choice">
+        <a class="ch" id="iamt-direct" href="https://cdn.jsdelivr.net/gh/casparcraven/fishful-thinking-app@112f6b8d60aeff263883389c3d6ce926cfbeee77/public-notes/IAMT-Annual-Conference-2026-Your-notes.pdf" target="_blank" rel="noopener" download><b class="mw">Just download the notes</b><span>Six pages: the three questions, the charts I had to redraw, and space to redraw your own.</span><i>Download (PDF) &rarr;</i></a>
+        <button class="ch" id="iamt-start"><b class="mw">Five quick questions first</b><span>Pick the question that hit home and commit to one small change. Then the notes are yours.</span><i>Start &rarr;</i></button>
+      </div>
+    </div>
+
+    <div class="step" data-s="1">
       <div class="lab">1 of 5</div>
       <div class="q mw">Which question hit home?</div>
       <p class="sub">The one you'll take back to work.</p>
@@ -140,14 +155,15 @@
   var EP='https://script.google.com/macros/s/AKfycbxdP9c3E87OGbjTnPq5lWza__zGrqI_RtFLnq4AoARGYzxlFEmg0N6wV5dj4sg8SAtp/exec';
   var KEY='iamt-flow-2026';
   var root=document.getElementById('iamt'); if(!root) return;
-  var d={event:'IAMT Annual Conference 2026'}, cur=1, sent=false;
+  var d={event:'IAMT Annual Conference 2026'}, cur=0, sent=false;
   try{ if(/[?&]reset/.test(location.search)) localStorage.removeItem(KEY); var saved=JSON.parse(localStorage.getItem(KEY)||'null'); if(saved&&saved.done){ d=saved; cur=6; } }catch(e){}
   var steps=root.querySelectorAll('.step'), bars=root.querySelectorAll('#iamt-steps i');
-  function show(n){ cur=n; steps.forEach(function(s){ s.classList.toggle('on', +s.getAttribute('data-s')===n); }); bars.forEach(function(b,i){ b.classList.toggle('on', i<Math.min(n,5)); }); document.getElementById('iamt-steps').style.display=n>5?'none':'flex'; if(n===6) fillDone(); var c=root.querySelector('.card'); if(c && c.getBoundingClientRect().top<0) c.scrollIntoView({behavior:'smooth'}); }
+  function show(n){ cur=n; steps.forEach(function(s){ s.classList.toggle('on', +s.getAttribute('data-s')===n); }); bars.forEach(function(b,i){ b.classList.toggle('on', i<Math.min(n,5)); }); document.getElementById('iamt-steps').style.display=(n>=1&&n<=5)?'flex':'none'; if(n===6) fillDone(); var c=root.querySelector('.card'); if(c && c.getBoundingClientRect().top<0) c.scrollIntoView({behavior:'smooth'}); }
   function fillDone(){ var c=document.getElementById('iamt-commit'); if(d.change){ c.style.display='block'; c.textContent=''; var b=document.createElement('b'); b.textContent='Your one small change: '; c.appendChild(b); c.appendChild(document.createTextNode(d.change)); } else c.style.display='none'; }
   root.querySelectorAll('.opts').forEach(function(g){ var key=g.getAttribute('data-key'); g.querySelectorAll('.opt').forEach(function(o){ o.addEventListener('click',function(){ g.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); o.classList.add('sel'); d[key]=o.getAttribute('data-v'); if(key==='referral'){ document.getElementById('iamt-ref').style.display=d.referral==='Yes'?'block':'none'; if(d.referral==='Yes') return; } setTimeout(function(){ show(cur+1); },250); }); }); });
   root.querySelectorAll('[data-skip]').forEach(function(b){ b.addEventListener('click',function(){ show(cur+1); }); });
-  root.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click',function(){ show(Math.max(1,cur-1)); }); });
+  root.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click',function(){ show(Math.max(0,cur-1)); }); });
+  document.getElementById('iamt-start').addEventListener('click',function(){ show(1); });
   root.querySelectorAll('[data-next]').forEach(function(b){ b.addEventListener('click',function(){ if(cur===3) d.change=document.getElementById('iamt-change').value.trim(); if(cur===4){ var w=document.getElementById('iamt-refwho').value.trim(); if(d.referral==='Yes'&&w) d.referral='Yes: '+w; } show(cur+1); }); });
   document.getElementById('iamt-go').addEventListener('click',function(){
     var em=document.getElementById('iamt-email').value.trim(), err=document.getElementById('iamt-err');
@@ -157,7 +173,7 @@
     d.done=true; try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){}
     show(6);
   });
-  document.getElementById('iamt-again').addEventListener('click',function(){ try{ localStorage.removeItem(KEY); }catch(e){} d={event:'IAMT Annual Conference 2026'}; sent=false; root.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); ['iamt-change','iamt-refwho','iamt-name','iamt-email'].forEach(function(id){ document.getElementById(id).value=''; }); document.getElementById('iamt-news').checked=false; document.getElementById('iamt-ref').style.display='none'; show(1); });
+  document.getElementById('iamt-again').addEventListener('click',function(){ try{ localStorage.removeItem(KEY); }catch(e){} d={event:'IAMT Annual Conference 2026'}; sent=false; root.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); ['iamt-change','iamt-refwho','iamt-name','iamt-email'].forEach(function(id){ document.getElementById(id).value=''; }); document.getElementById('iamt-news').checked=false; document.getElementById('iamt-ref').style.display='none'; show(0); });
   show(cur);
 })();
 </script>
