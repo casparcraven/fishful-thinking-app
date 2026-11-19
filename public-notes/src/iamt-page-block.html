@@ -1,0 +1,163 @@
+<!-- IAMT post-talk page -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+#iamt{--p:#4d1289;--pd:#2e0a55;--blue:#3d79b0;--ink:#1d1d1f;--grey:#6b6b70;--line:#e3e4e8;--q1:#8a4aa3;--q2:#e9733f;--q3:#5fae44;font-family:Inter,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);max-width:760px;margin:0 auto 40px}
+#iamt *{box-sizing:border-box}
+#iamt h1,#iamt h2,#iamt h3,#iamt .mw{font-family:"Merriweather Sans",Inter,sans-serif;font-weight:700;letter-spacing:0;margin:0}
+#iamt .hero{position:relative;background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.06) 0 2px,transparent 3px) ,var(--pd);border-radius:22px;padding:34px 34px 70px;color:#fff;overflow:hidden}
+#iamt .hero:before{content:"";position:absolute;right:-160px;top:-160px;width:560px;height:560px;border-radius:50%;background:repeating-radial-gradient(circle,transparent 0 34px,rgba(255,255,255,.07) 35px 36px);pointer-events:none}
+#iamt .logo{display:inline-block;background:#fff;border-radius:12px;padding:10px 16px;position:relative}
+#iamt .logo img{height:44px;display:block}
+#iamt .photo{position:absolute;right:30px;top:24px;width:150px;background:#fff;padding:7px 7px 22px;border-radius:6px;transform:rotate(4deg);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#iamt .photo img{width:100%;display:block;border-radius:3px}
+#iamt .photo span{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;color:#555}
+#iamt .kick{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.8;margin:34px 0 10px;position:relative}
+#iamt .hero h1{font-size:40px;line-height:1.12;position:relative;color:#fff}
+#iamt .hl{background:#f4dc3a;color:var(--pd);padding:0 8px;border-radius:4px}
+#iamt .hero p{font-size:17px;line-height:1.5;margin:14px 0 0;max-width:470px;opacity:.95;position:relative}
+#iamt .card{background:#fff;border-radius:18px;box-shadow:0 12px 40px rgba(20,10,40,.14);padding:28px;margin:-48px 18px 0;position:relative}
+#iamt .steps{display:flex;gap:6px;margin-bottom:18px}
+#iamt .steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+#iamt .steps i.on{background:var(--p)}
+#iamt .lab{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);margin-bottom:8px}
+#iamt .q{font-size:23px;line-height:1.25;margin-bottom:6px}
+#iamt .sub{color:var(--grey);font-size:15px;margin:0 0 18px;line-height:1.5}
+#iamt .opts{display:grid;gap:10px}
+#iamt .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:15px 16px;font-size:16px;cursor:pointer;font-family:inherit;color:var(--ink);transition:border-color .15s,background .15s}
+#iamt .opt:hover{border-color:var(--p);background:#faf7fd}
+#iamt .opt.sel{border-color:var(--p);background:#f3ecfa}
+#iamt .opt b{width:12px;height:12px;border-radius:50%;flex:none}
+#iamt .rate{display:flex;gap:10px}
+#iamt .rate .opt{justify-content:center;font-size:20px;font-weight:700;padding:16px 0}
+#iamt .scale{display:flex;justify-content:space-between;color:var(--grey);font-size:12px;margin-top:6px}
+#iamt textarea,#iamt input[type=text],#iamt input[type=email]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px 15px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff}
+#iamt textarea{min-height:110px;resize:vertical}
+#iamt textarea:focus,#iamt input:focus{outline:none;border-color:var(--p)}
+#iamt .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+#iamt .chk{display:flex;gap:10px;align-items:flex-start;font-size:15px;margin:14px 0 4px;line-height:1.4;cursor:pointer}
+#iamt .chk input{width:18px;height:18px;margin-top:2px;accent-color:var(--p)}
+#iamt .nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:12px}
+#iamt .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--p);color:#fff;border:0;border-radius:999px;padding:14px 26px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;font-family:inherit}
+#iamt .btn:hover{background:var(--pd)}
+#iamt .link{background:none;border:0;color:var(--grey);font-size:14px;cursor:pointer;text-decoration:underline;font-family:inherit;padding:6px 0}
+#iamt .step{display:none}
+#iamt .step.on{display:block;animation:iamtIn .25s ease}
+@keyframes iamtIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#iamt .notes{display:flex;gap:18px;align-items:center;background:#f6f3fb;border-radius:14px;padding:18px;margin:6px 0 18px}
+#iamt .pdf{width:54px;height:66px;border-radius:6px;background:var(--p);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;flex:none}
+#iamt .commit{border-left:4px solid var(--q3);background:#f3faf0;border-radius:10px;padding:14px 16px;margin:0 0 18px;font-size:15px;line-height:1.5}
+#iamt .more{display:grid;gap:10px;margin-top:26px}
+#iamt .more a{display:flex;justify-content:space-between;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:15px 16px;color:var(--ink);text-decoration:none;font-size:15px}
+#iamt .more a:hover{border-color:var(--p)}
+#iamt .err{color:#b42318;font-size:14px;margin-top:8px;display:none}
+#iamt .thanks{font-size:14px;color:var(--grey);margin-top:22px;line-height:1.5}
+@media(max-width:620px){#iamt .hero{padding:24px 22px 64px;border-radius:0}#iamt .photo{display:none}#iamt .hero h1{font-size:32px}#iamt .card{margin:-44px 10px 0;padding:22px}#iamt .row{grid-template-columns:1fr}#iamt .q{font-size:21px}}
+</style>
+
+<div id="iamt">
+  <div class="hero">
+    <div class="logo"><img src="https://cdn.jsdelivr.net/gh/casparcraven/fishful-thinking-app@112f6b8d60aeff263883389c3d6ce926cfbeee77/public-notes/img/iamt-logo.png" alt="IAMT"></div>
+    <div class="photo"><img src="https://images.squarespace-cdn.com/content/v1/580f366bc534a5c144fe5dee/a4d2b97d-a254-4323-bd77-0a2e8de31967/caspar-chart-pink.jpg" alt="Caspar Craven on stage"><span>Redrawing the chart.</span></div>
+    <div class="kick">IAMT Annual Conference &amp; Awards · Richmond Hill Hotel · 2 December 2026</div>
+    <h1>Big Bold <span class="hl">Transformation</span></h1>
+    <p>Thank you, IAMT. Five quick questions and your notes are yours: the three questions, the charts I had to redraw, and space to redraw your own.</p>
+  </div>
+
+  <div class="card">
+    <div class="steps" id="iamt-steps"><i></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="step on" data-s="1">
+      <div class="lab">1 of 5</div>
+      <div class="q mw">Which question hit home?</div>
+      <p class="sub">The one you'll take back to work.</p>
+      <div class="opts" data-key="question">
+        <button class="opt" data-v="What am I not seeing?"><b style="background:var(--q1)"></b>What am I not seeing?</button>
+        <button class="opt" data-v="How aligned is our team?"><b style="background:var(--q2)"></b>How aligned is our team?</button>
+        <button class="opt" data-v="Impossible, or just hard?"><b style="background:var(--q3)"></b>Impossible, or just hard?</button>
+      </div>
+      <div class="nav"><span></span><button class="link" data-skip>Skip</button></div>
+    </div>
+
+    <div class="step" data-s="2">
+      <div class="lab">2 of 5</div>
+      <div class="q mw">How useful was the session for you?</div>
+      <p class="sub">Tap a number.</p>
+      <div class="rate opts" data-key="rating">
+        <button class="opt" data-v="1">1</button><button class="opt" data-v="2">2</button><button class="opt" data-v="3">3</button><button class="opt" data-v="4">4</button><button class="opt" data-v="5">5</button>
+      </div>
+      <div class="scale"><span>Not much</span><span>Really useful</span></div>
+      <div class="nav"><button class="link" data-back>Back</button><button class="link" data-skip>Skip</button></div>
+    </div>
+
+    <div class="step" data-s="3">
+      <div class="lab">3 of 5</div>
+      <div class="q mw">What's your one small change?</div>
+      <p class="sub">One thing, and by when. Small enough to start this week.</p>
+      <textarea id="iamt-change" placeholder="e.g. Ask my team on Monday: would you mind telling me something I don't seem to realise?"></textarea>
+      <div class="nav"><button class="link" data-back>Back</button><button class="btn" data-next>Next</button></div>
+    </div>
+
+    <div class="step" data-s="4">
+      <div class="lab">4 of 5</div>
+      <div class="q mw">Know someone who'd get value from this?</div>
+      <p class="sub">A leader, a team or an event that's facing big change.</p>
+      <div class="opts" data-key="referral" data-noauto>
+        <button class="opt" data-v="Yes">Yes, I know someone</button>
+        <button class="opt" data-v="No">Not right now</button>
+      </div>
+      <div id="iamt-ref" style="display:none;margin-top:12px"><input type="text" id="iamt-refwho" placeholder="Their name and organisation (optional)"></div>
+      <div class="nav"><button class="link" data-back>Back</button><button class="btn" data-next>Next</button></div>
+    </div>
+
+    <div class="step" data-s="5">
+      <div class="lab">5 of 5</div>
+      <div class="q mw">Want me to check in on your change?</div>
+      <p class="sub">Optional. Leave your email and I'll check in with you. You don't need to, to get the notes.</p>
+      <div class="row"><input type="text" id="iamt-name" placeholder="First name"><input type="email" id="iamt-email" placeholder="Email"></div>
+      <label class="chk"><input type="checkbox" id="iamt-news"><span>Send me The Big Bold Mindset Newsletter too. Unsubscribe any time.</span></label>
+      <div class="err" id="iamt-err">That email doesn't look quite right.</div>
+      <div class="nav"><button class="link" data-back>Back</button><button class="btn" id="iamt-go">Get my notes</button></div>
+    </div>
+
+    <div class="step" data-s="6">
+      <div class="lab">Your notes</div>
+      <div class="q mw" style="margin-bottom:14px">Here they are.</div>
+      <div class="notes"><div class="pdf">PDF</div><div><div class="mw" style="font-size:17px">IAMT Annual Conference 2026: Your notes</div><div class="sub" style="margin:4px 0 0">Six pages: the three questions, the charts I had to redraw, and a page to redraw your own.</div></div></div>
+      <div class="commit" id="iamt-commit" style="display:none"></div>
+      <a class="btn" id="iamt-dl" href="https://cdn.jsdelivr.net/gh/casparcraven/fishful-thinking-app@112f6b8d60aeff263883389c3d6ce926cfbeee77/public-notes/IAMT-Annual-Conference-2026-Your-notes.pdf" target="_blank" rel="noopener" download>Download your notes (PDF)</a>
+      <div class="more">
+        <a href="https://www.bigboldgoals.com">Get the rest of the stories and principles in The Big Bold Mindset <span>&rarr;</span></a>
+        <a href="https://www.linkedin.com/in/casparcraven" target="_blank" rel="noopener">Connect on LinkedIn and tell me how your change goes <span>&rarr;</span></a>
+      </div>
+      <p class="thanks">Thank you to Saleha, Chris and the whole IAMT team for having me. It's time to redraw the charts.</p>
+      <button class="link" id="iamt-again" style="margin-top:6px">Start again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var EP='https://script.google.com/macros/s/AKfycbxdP9c3E87OGbjTnPq5lWza__zGrqI_RtFLnq4AoARGYzxlFEmg0N6wV5dj4sg8SAtp/exec';
+  var KEY='iamt-flow-2026';
+  var root=document.getElementById('iamt'); if(!root) return;
+  var d={event:'IAMT Annual Conference 2026'}, cur=1, sent=false;
+  try{ if(/[?&]reset/.test(location.search)) localStorage.removeItem(KEY); var saved=JSON.parse(localStorage.getItem(KEY)||'null'); if(saved&&saved.done){ d=saved; cur=6; } }catch(e){}
+  var steps=root.querySelectorAll('.step'), bars=root.querySelectorAll('#iamt-steps i');
+  function show(n){ cur=n; steps.forEach(function(s){ s.classList.toggle('on', +s.getAttribute('data-s')===n); }); bars.forEach(function(b,i){ b.classList.toggle('on', i<Math.min(n,5)); }); document.getElementById('iamt-steps').style.display=n>5?'none':'flex'; if(n===6) fillDone(); var c=root.querySelector('.card'); if(c && c.getBoundingClientRect().top<0) c.scrollIntoView({behavior:'smooth'}); }
+  function fillDone(){ var c=document.getElementById('iamt-commit'); if(d.change){ c.style.display='block'; c.textContent=''; var b=document.createElement('b'); b.textContent='Your one small change: '; c.appendChild(b); c.appendChild(document.createTextNode(d.change)); } else c.style.display='none'; }
+  root.querySelectorAll('.opts').forEach(function(g){ var key=g.getAttribute('data-key'); g.querySelectorAll('.opt').forEach(function(o){ o.addEventListener('click',function(){ g.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); o.classList.add('sel'); d[key]=o.getAttribute('data-v'); if(key==='referral'){ document.getElementById('iamt-ref').style.display=d.referral==='Yes'?'block':'none'; return; } setTimeout(function(){ show(cur+1); },250); }); }); });
+  root.querySelectorAll('[data-skip]').forEach(function(b){ b.addEventListener('click',function(){ show(cur+1); }); });
+  root.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click',function(){ show(Math.max(1,cur-1)); }); });
+  root.querySelectorAll('[data-next]').forEach(function(b){ b.addEventListener('click',function(){ if(cur===3) d.change=document.getElementById('iamt-change').value.trim(); if(cur===4){ var w=document.getElementById('iamt-refwho').value.trim(); if(d.referral==='Yes'&&w) d.referral='Yes: '+w; } show(cur+1); }); });
+  document.getElementById('iamt-go').addEventListener('click',function(){
+    var em=document.getElementById('iamt-email').value.trim(), err=document.getElementById('iamt-err');
+    if(em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err.style.display='block'; return; } err.style.display='none';
+    d.name=document.getElementById('iamt-name').value.trim(); d.email=em; d.newsletter=document.getElementById('iamt-news').checked && !!em;
+    if(!sent){ sent=true; try{ fetch(EP,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}); }catch(e){} }
+    d.done=true; try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){}
+    show(6);
+  });
+  document.getElementById('iamt-again').addEventListener('click',function(){ try{ localStorage.removeItem(KEY); }catch(e){} d={event:'IAMT Annual Conference 2026'}; sent=false; root.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); ['iamt-change','iamt-refwho','iamt-name','iamt-email'].forEach(function(id){ document.getElementById(id).value=''; }); document.getElementById('iamt-news').checked=false; document.getElementById('iamt-ref').style.display='none'; show(1); });
+  show(cur);
+})();
+</script>
