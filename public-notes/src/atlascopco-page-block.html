@@ -1,0 +1,179 @@
+<!-- Atlas Copco (VTBA People & Culture Summit) post-talk page -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+#atlas{--p:#1f5b70;--pd:#123a48;--blue:#3d79b0;--ink:#1d1d1f;--grey:#6b6b70;--line:#e3e4e8;--q1:#8a4aa3;--q2:#e9733f;--q3:#5fae44;font-family:Inter,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);max-width:760px;margin:0 auto 40px}
+#atlas *{box-sizing:border-box}
+#atlas h1,#atlas h2,#atlas h3,#atlas .mw{font-family:"Merriweather Sans",Inter,sans-serif;font-weight:700;letter-spacing:0;margin:0}
+#atlas .hero{position:relative;background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.06) 0 2px,transparent 3px) ,var(--pd);border-radius:22px;padding:34px 34px 70px;color:#fff;overflow:hidden}
+#atlas .hero:before{content:"";position:absolute;right:-160px;top:-160px;width:560px;height:560px;border-radius:50%;background:repeating-radial-gradient(circle,transparent 0 34px,rgba(255,255,255,.07) 35px 36px);pointer-events:none}
+#atlas .logo{display:inline-block;background:#fff;border-radius:12px;padding:10px 16px;position:relative}
+#atlas .logo img{height:44px;display:block}
+#atlas .photo{position:absolute;right:30px;top:24px;width:150px;background:#fff;padding:7px 7px 22px;border-radius:6px;transform:rotate(4deg);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#atlas .photo img{width:100%;display:block;border-radius:3px}
+#atlas .photo span{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:10px;color:#555}
+#atlas .kick{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.8;margin:34px 0 10px;position:relative;max-width:calc(100% - 170px);line-height:1.6}
+#atlas .hero h1{font-size:40px;line-height:1.12;position:relative;color:#fff}
+#atlas .hl{background:#f4dc3a;color:var(--pd);padding:0 8px;border-radius:4px}
+#atlas .hero p{font-size:17px;line-height:1.5;margin:14px 0 0;max-width:470px;opacity:.95;position:relative}
+#atlas .card{background:#fff;border-radius:18px;box-shadow:0 12px 40px rgba(10,30,40,.14);padding:28px;margin:-48px 18px 0;position:relative}
+#atlas .steps{display:flex;gap:6px;margin-bottom:18px}
+#atlas .steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+#atlas .steps i.on{background:var(--p)}
+#atlas .lab{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grey);margin-bottom:8px}
+#atlas .q{font-size:23px;line-height:1.25;margin-bottom:6px}
+#atlas .sub{color:var(--grey);font-size:15px;margin:0 0 18px;line-height:1.5}
+#atlas .opts{display:grid;gap:10px}
+#atlas .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:15px 16px;font-size:16px;cursor:pointer;font-family:inherit;color:var(--ink);transition:border-color .15s,background .15s}
+#atlas .opt:hover{border-color:var(--p);background:#f1f7f9}
+#atlas .opt.sel{border-color:var(--p);background:#e6f1f4}
+#atlas .opt b{width:12px;height:12px;border-radius:50%;flex:none}
+#atlas .rate{display:flex;gap:10px}
+#atlas .rate .opt{justify-content:center;font-size:20px;font-weight:700;padding:16px 0}
+#atlas .scale{display:flex;justify-content:space-between;color:var(--grey);font-size:12px;margin-top:6px}
+#atlas textarea,#atlas input[type=text],#atlas input[type=email]{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px 15px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff}
+#atlas textarea{min-height:110px;resize:vertical}
+#atlas textarea:focus,#atlas input:focus{outline:none;border-color:var(--p)}
+#atlas .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+#atlas .chk{display:flex;gap:10px;align-items:flex-start;font-size:15px;margin:14px 0 4px;line-height:1.4;cursor:pointer}
+#atlas .chk input{width:18px;height:18px;margin-top:2px;accent-color:var(--p)}
+#atlas .nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:12px}
+#atlas .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--p);color:#fff;border:0;border-radius:999px;padding:14px 26px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;font-family:inherit}
+#atlas .btn:hover{background:var(--pd)}
+#atlas .link{background:none;border:0;color:var(--grey);font-size:14px;cursor:pointer;text-decoration:underline;font-family:inherit;padding:6px 0}
+#atlas .choice{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#atlas .ch{display:flex;flex-direction:column;gap:8px;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:18px;cursor:pointer;font-family:inherit;color:var(--ink);text-decoration:none;transition:border-color .15s,background .15s}
+#atlas .ch:hover{border-color:var(--p);background:#f1f7f9}
+#atlas .ch b{font-size:17px}
+#atlas .ch span{color:var(--grey);font-size:14px;line-height:1.45;flex:1}
+#atlas .ch i{font-style:normal;font-weight:700;color:var(--p);font-size:15px}
+#atlas .step{display:none}
+#atlas .step.on{display:block;animation:atlasIn .25s ease}
+@keyframes atlasIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#atlas .notes{display:flex;gap:18px;align-items:center;background:#eef5f7;border-radius:14px;padding:18px;margin:6px 0 18px}
+#atlas .pdf{width:54px;height:66px;border-radius:6px;background:var(--p);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;flex:none}
+#atlas .commit{border-left:4px solid var(--q3);background:#f3faf0;border-radius:10px;padding:14px 16px;margin:0 0 18px;font-size:15px;line-height:1.5}
+#atlas .more{display:grid;gap:10px;margin-top:26px}
+#atlas .more a{display:flex;justify-content:space-between;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:15px 16px;color:var(--ink);text-decoration:none;font-size:15px}
+#atlas .more a:hover{border-color:var(--p)}
+#atlas .err{color:#b42318;font-size:14px;margin-top:8px;display:none}
+#atlas .thanks{font-size:14px;color:var(--grey);margin-top:22px;line-height:1.5}
+@media(max-width:620px){#atlas .choice{grid-template-columns:1fr}#atlas .kick{max-width:none}#atlas .hero{padding:24px 22px 64px;border-radius:0}#atlas .photo{display:none}#atlas .hero h1{font-size:32px}#atlas .card{margin:-44px 10px 0;padding:22px}#atlas .row{grid-template-columns:1fr}#atlas .q{font-size:21px}}
+</style>
+
+<div id="atlas">
+  <div class="hero">
+    <div class="logo"><img src="https://cdn.jsdelivr.net/gh/casparcraven/fishful-thinking-app@9e0dcb54bf9f6dff31486697b53014aa678ae351/public-notes/img/atlascopco-logo.png" alt="Atlas Copco Group"></div>
+    <div class="photo"><img src="https://images.squarespace-cdn.com/content/v1/580f366bc534a5c144fe5dee/a4d2b97d-a254-4323-bd77-0a2e8de31967/caspar-chart-pink.jpg" alt="Caspar Craven on stage"><span>Redrawing the chart.</span></div>
+    <div class="kick">VTBA People &amp; Culture Summit · Amex Stadium, Brighton · 3 December 2026</div>
+    <h1>Change <span class="hl">Ready</span></h1>
+    <p>Thank you, Atlas Copco. Here are your notes from today: the three questions, the charts I had to redraw, and space to redraw your own.</p>
+  </div>
+
+  <div class="card">
+    <div class="steps" id="atlas-steps"><i></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="step on" data-s="0">
+      <div class="lab">Your notes</div>
+      <div class="q mw" style="margin-bottom:16px">How would you like them?</div>
+      <div class="choice">
+        <a class="ch" id="atlas-direct" href="https://cdn.jsdelivr.net/gh/casparcraven/fishful-thinking-app@9e0dcb54bf9f6dff31486697b53014aa678ae351/public-notes/VTBA-People-Culture-Summit-2026-Your-notes.pdf" target="_blank" rel="noopener" download><b class="mw">Just download the notes</b><span>Six pages: the three questions, the charts I had to redraw, your leadership model, and space to redraw your own.</span><i>Download (PDF) &rarr;</i></a>
+        <button class="ch" id="atlas-start"><b class="mw">Five quick questions first</b><span>Pick the question that hit home and commit to one small change. Then the notes are yours.</span><i>Start &rarr;</i></button>
+      </div>
+    </div>
+
+    <div class="step" data-s="1">
+      <div class="lab">1 of 5</div>
+      <div class="q mw">Which question hit home?</div>
+      <p class="sub">The one you'll take back to work.</p>
+      <div class="opts" data-key="question">
+        <button class="opt" data-v="What am I not seeing?"><b style="background:var(--q1)"></b>What am I not seeing?</button>
+        <button class="opt" data-v="How aligned is our team?"><b style="background:var(--q2)"></b>How aligned is our team?</button>
+        <button class="opt" data-v="Impossible, or just hard?"><b style="background:var(--q3)"></b>Impossible, or just hard?</button>
+      </div>
+      <div class="nav"><span></span><button class="link" data-skip>Skip</button></div>
+    </div>
+
+    <div class="step" data-s="2">
+      <div class="lab">2 of 5</div>
+      <div class="q mw">How useful was the session for you?</div>
+      <p class="sub">Tap a number.</p>
+      <div class="rate opts" data-key="rating">
+        <button class="opt" data-v="1">1</button><button class="opt" data-v="2">2</button><button class="opt" data-v="3">3</button><button class="opt" data-v="4">4</button><button class="opt" data-v="5">5</button>
+      </div>
+      <div class="scale"><span>Not much</span><span>Really useful</span></div>
+      <div class="nav"><button class="link" data-back>Back</button><button class="link" data-skip>Skip</button></div>
+    </div>
+
+    <div class="step" data-s="3">
+      <div class="lab">3 of 5</div>
+      <div class="q mw">What's your one small change?</div>
+      <p class="sub">One thing, and by when. Small enough to start this week.</p>
+      <textarea id="atlas-change" placeholder="e.g. Ask my team on Monday: would you mind telling me something I don't seem to realise?"></textarea>
+      <div class="nav"><button class="link" data-back>Back</button><button class="btn" data-next>Next</button></div>
+    </div>
+
+    <div class="step" data-s="4">
+      <div class="lab">4 of 5</div>
+      <div class="q mw">Know someone who'd get value from this?</div>
+      <p class="sub">A leader, a team or an event that's facing big change.</p>
+      <div class="opts" data-key="referral" data-noauto>
+        <button class="opt" data-v="Yes">Yes, I know someone</button>
+        <button class="opt" data-v="No">Not right now</button>
+      </div>
+      <div id="atlas-ref" style="display:none;margin-top:12px"><input type="text" id="atlas-refwho" placeholder="Their name and organisation (optional)"></div>
+      <div class="nav"><button class="link" data-back>Back</button><button class="btn" data-next>Next</button></div>
+    </div>
+
+    <div class="step" data-s="5">
+      <div class="lab">5 of 5</div>
+      <div class="q mw">Want me to check in on your change?</div>
+      <p class="sub">Optional. Leave your email and I'll check in with you. You don't need to, to get the notes.</p>
+      <div class="row"><input type="text" id="atlas-name" placeholder="First name"><input type="email" id="atlas-email" placeholder="Email"></div>
+      <label class="chk"><input type="checkbox" id="atlas-news"><span>Send me The Big Bold Mindset Newsletter too. Unsubscribe any time.</span></label>
+      <div class="err" id="atlas-err">That email doesn't look quite right.</div>
+      <div class="nav"><button class="link" data-back>Back</button><button class="btn" id="atlas-go">Get my notes</button></div>
+    </div>
+
+    <div class="step" data-s="6">
+      <div class="lab">Your notes</div>
+      <div class="q mw" style="margin-bottom:14px">Here they are.</div>
+      <div class="notes"><div class="pdf">PDF</div><div><div class="mw" style="font-size:17px">VTBA People &amp; Culture Summit 2026: Your notes</div><div class="sub" style="margin:4px 0 0">Six pages: the three questions, the charts I had to redraw, your leadership model, and a page to redraw your own.</div></div></div>
+      <div class="commit" id="atlas-commit" style="display:none"></div>
+      <a class="btn" id="atlas-dl" href="https://cdn.jsdelivr.net/gh/casparcraven/fishful-thinking-app@9e0dcb54bf9f6dff31486697b53014aa678ae351/public-notes/VTBA-People-Culture-Summit-2026-Your-notes.pdf" target="_blank" rel="noopener" download>Download your notes (PDF)</a>
+      <div class="more">
+        <a href="https://www.bigboldgoals.com">Get the rest of the stories and principles in The Big Bold Mindset <span>&rarr;</span></a>
+        <a href="https://www.linkedin.com/in/casparcraven" target="_blank" rel="noopener">Connect on LinkedIn and tell me how your change goes <span>&rarr;</span></a>
+      </div>
+      <p class="thanks">Thank you to Kirsty, Felice and everyone at Atlas Copco for having me. It's time to redraw the charts.</p>
+      <button class="link" id="atlas-again" style="margin-top:6px">Start again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var EP='https://script.google.com/macros/s/AKfycbz2gzFF80_0kCmmjfCYbJEtY5k9OW_HwLyKuu2tWeAUQfuRrpKii65cmz0_S6_HJvd3/exec';
+  var KEY='atlascopco-flow-2026';
+  var root=document.getElementById('atlas'); if(!root) return;
+  var d={event:'VTBA People & Culture Summit 2026'}, cur=0, sent=false;
+  try{ if(/[?&]reset/.test(location.search)) localStorage.removeItem(KEY); var saved=JSON.parse(localStorage.getItem(KEY)||'null'); if(saved&&saved.done){ d=saved; cur=6; } }catch(e){}
+  var steps=root.querySelectorAll('.step'), bars=root.querySelectorAll('#atlas-steps i');
+  function show(n){ cur=n; steps.forEach(function(s){ s.classList.toggle('on', +s.getAttribute('data-s')===n); }); bars.forEach(function(b,i){ b.classList.toggle('on', i<Math.min(n,5)); }); document.getElementById('atlas-steps').style.display=(n>=1&&n<=5)?'flex':'none'; if(n===6) fillDone(); var c=root.querySelector('.card'); if(c && c.getBoundingClientRect().top<0) c.scrollIntoView({behavior:'smooth'}); }
+  function fillDone(){ var c=document.getElementById('atlas-commit'); if(d.change){ c.style.display='block'; c.textContent=''; var b=document.createElement('b'); b.textContent='Your one small change: '; c.appendChild(b); c.appendChild(document.createTextNode(d.change)); } else c.style.display='none'; }
+  root.querySelectorAll('.opts').forEach(function(g){ var key=g.getAttribute('data-key'); g.querySelectorAll('.opt').forEach(function(o){ o.addEventListener('click',function(){ g.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); o.classList.add('sel'); d[key]=o.getAttribute('data-v'); if(key==='referral'){ document.getElementById('atlas-ref').style.display=d.referral==='Yes'?'block':'none'; if(d.referral==='Yes') return; } setTimeout(function(){ show(cur+1); },250); }); }); });
+  root.querySelectorAll('[data-skip]').forEach(function(b){ b.addEventListener('click',function(){ show(cur+1); }); });
+  root.querySelectorAll('[data-back]').forEach(function(b){ b.addEventListener('click',function(){ show(Math.max(0,cur-1)); }); });
+  document.getElementById('atlas-start').addEventListener('click',function(){ show(1); });
+  root.querySelectorAll('[data-next]').forEach(function(b){ b.addEventListener('click',function(){ if(cur===3) d.change=document.getElementById('atlas-change').value.trim(); if(cur===4){ var w=document.getElementById('atlas-refwho').value.trim(); if(d.referral==='Yes'&&w) d.referral='Yes: '+w; } show(cur+1); }); });
+  document.getElementById('atlas-go').addEventListener('click',function(){
+    var em=document.getElementById('atlas-email').value.trim(), err=document.getElementById('atlas-err');
+    if(em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){ err.style.display='block'; return; } err.style.display='none';
+    d.name=document.getElementById('atlas-name').value.trim(); d.email=em; d.newsletter=document.getElementById('atlas-news').checked && !!em;
+    if(!sent){ sent=true; try{ fetch(EP,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}); }catch(e){} }
+    d.done=true; try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){}
+    show(6);
+  });
+  document.getElementById('atlas-again').addEventListener('click',function(){ try{ localStorage.removeItem(KEY); }catch(e){} d={event:'VTBA People & Culture Summit 2026'}; sent=false; root.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');}); ['atlas-change','atlas-refwho','atlas-name','atlas-email'].forEach(function(id){ document.getElementById(id).value=''; }); document.getElementById('atlas-news').checked=false; document.getElementById('atlas-ref').style.display='none'; show(0); });
+  show(cur);
+})();
+</script>
